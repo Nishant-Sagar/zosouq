@@ -1,0 +1,190 @@
+import { useEffect, useState } from 'react'
+import { useParams, Link } from 'react-router-dom'
+import { CheckCircle, Package, Truck, Clock, Copy, ArrowRight } from 'lucide-react'
+import { getOrder } from '../api'
+import { useToast } from '../context/CartContext'
+import { formatPrice } from '../utils/format'
+
+const STATUS_STEPS = [
+  { key: 'pending', label: 'Order Placed', icon: Package },
+  { key: 'confirmed', label: 'Confirmed', icon: CheckCircle },
+  { key: 'shipped', label: 'Shipped', icon: Truck },
+  { key: 'delivered', label: 'Delivered', icon: CheckCircle },
+]
+
+const STATUS_INDEX = { pending: 0, confirmed: 1, shipped: 2, delivered: 3 }
+
+export default function OrderConfirmationPage() {
+  const { orderNumber } = useParams()
+  const [order, setOrder] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const addToast = useToast()
+
+  useEffect(() => {
+    getOrder(orderNumber).then(setOrder).catch(() => {}).finally(() => setLoading(false))
+  }, [orderNumber])
+
+  const copyOrderNumber = () => {
+    navigator.clipboard.writeText(orderNumber)
+    addToast('Order number copied!', 'success')
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (!order) {
+    return (
+      <div className="text-center py-20">
+        <h2 className="text-xl font-bold mb-4">Order not found</h2>
+        <Link to="/" className="btn-primary">Go Home</Link>
+      </div>
+    )
+  }
+
+  const stepIndex = STATUS_INDEX[order.status] ?? 0
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+      {/* Success Header */}
+      <div className="text-center mb-10">
+        <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5">
+          <CheckCircle className="w-10 h-10 text-emerald-500" />
+        </div>
+        <h1 className="text-3xl font-extrabold text-slate-900 mb-2">Order Confirmed!</h1>
+        <p className="text-slate-500 text-lg">
+          Thank you, <span className="font-semibold text-slate-700">{order.customer_name}</span>!
+          Your order has been received.
+        </p>
+      </div>
+
+      {/* Order Number */}
+      <div className="card p-5 mb-6 flex items-center justify-between">
+        <div>
+          <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Order Number</p>
+          <p className="text-2xl font-bold text-primary-600 font-mono">{order.order_number}</p>
+        </div>
+        <button
+          onClick={copyOrderNumber}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+        >
+          <Copy className="w-4 h-4" /> Copy
+        </button>
+      </div>
+
+      {/* Status Tracker */}
+      <div className="card p-6 mb-6">
+        <h2 className="font-bold text-slate-900 mb-6">Order Status</h2>
+        <div className="relative">
+          {/* Progress line */}
+          <div className="absolute top-5 left-5 right-5 h-0.5 bg-slate-200" />
+          <div
+            className="absolute top-5 left-5 h-0.5 bg-primary-600 transition-all duration-500"
+            style={{ width: `${(stepIndex / (STATUS_STEPS.length - 1)) * 100}%`, right: 'auto' }}
+          />
+          <div className="relative grid grid-cols-4 gap-2">
+            {STATUS_STEPS.map((step, idx) => {
+              const Icon = step.icon
+              const done = idx <= stepIndex
+              return (
+                <div key={step.key} className="flex flex-col items-center text-center">
+                  <div className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
+                    done ? 'bg-primary-600 border-primary-600' : 'bg-white border-slate-200'
+                  }`}>
+                    <Icon className={`w-4 h-4 ${done ? 'text-white' : 'text-slate-400'}`} />
+                  </div>
+                  <p className={`text-xs font-medium mt-2 ${done ? 'text-primary-700' : 'text-slate-400'}`}>
+                    {step.label}
+                  </p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+        <div className="mt-6 flex items-center gap-2 text-sm">
+          <Clock className="w-4 h-4 text-amber-500" />
+          <span className="text-slate-600">
+            Estimated delivery: <strong>2–5 business days</strong>
+          </span>
+        </div>
+      </div>
+
+      {/* Order Items */}
+      <div className="card p-6 mb-6">
+        <h2 className="font-bold text-slate-900 mb-4">Items Ordered</h2>
+        <div className="space-y-4">
+          {order.items.map(item => (
+            <div key={item.id} className="flex gap-3">
+              {item.product && (
+                <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0">
+                  <img
+                    src={item.product.image_url}
+                    alt={item.product.name}
+                    className="w-full h-full object-cover"
+                    onError={e => { e.target.src = `https://picsum.photos/seed/${item.product_id}/100/100` }}
+                  />
+                </div>
+              )}
+              <div className="flex-1">
+                <p className="font-medium text-slate-900 text-sm">{item.product?.name || 'Product'}</p>
+                <p className="text-xs text-slate-500">Qty: {item.quantity} × {formatPrice(item.price)}</p>
+              </div>
+              <p className="font-semibold text-slate-900">{formatPrice(item.price * item.quantity)}</p>
+            </div>
+          ))}
+        </div>
+        <div className="border-t border-slate-100 mt-4 pt-4 flex justify-between">
+          <span className="font-bold text-slate-900">Total</span>
+          <span className="text-xl font-extrabold text-primary-600">{formatPrice(order.total_amount)}</span>
+        </div>
+      </div>
+
+      {/* Delivery Details */}
+      <div className="card p-6 mb-8">
+        <h2 className="font-bold text-slate-900 mb-4">Delivery Details</h2>
+        <div className="grid sm:grid-cols-2 gap-4 text-sm">
+          <div>
+            <p className="text-slate-500 mb-0.5">Name</p>
+            <p className="font-medium text-slate-900">{order.customer_name}</p>
+          </div>
+          <div>
+            <p className="text-slate-500 mb-0.5">Phone</p>
+            <p className="font-medium text-slate-900">{order.customer_phone}</p>
+          </div>
+          <div>
+            <p className="text-slate-500 mb-0.5">Email</p>
+            <p className="font-medium text-slate-900">{order.customer_email}</p>
+          </div>
+          <div>
+            <p className="text-slate-500 mb-0.5">Payment</p>
+            <p className="font-medium text-emerald-600">💵 Cash on Delivery</p>
+          </div>
+          <div className="sm:col-span-2">
+            <p className="text-slate-500 mb-0.5">Delivery Address</p>
+            <p className="font-medium text-slate-900">{order.address}, {order.city}</p>
+          </div>
+          {order.notes && (
+            <div className="sm:col-span-2">
+              <p className="text-slate-500 mb-0.5">Notes</p>
+              <p className="font-medium text-slate-900">{order.notes}</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* CTA */}
+      <div className="text-center">
+        <Link to="/" className="btn-primary text-base px-10 py-4">
+          Continue Shopping <ArrowRight className="w-5 h-5" />
+        </Link>
+        <p className="text-sm text-slate-400 mt-4">
+          Keep your order number <strong className="text-slate-600">{order.order_number}</strong> to track your delivery.
+        </p>
+      </div>
+    </div>
+  )
+}
