@@ -1,130 +1,313 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, ChevronLeft, ChevronRight, Shield, RefreshCw, Headphones, Truck } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowRight, Truck, Shield, RotateCcw, Headphones, Zap, Clock, MapPin, Package, Percent, Sparkles, Award, Tag } from 'lucide-react'
 import { getCategories, getProducts } from '../api'
 import ProductCard from '../components/ProductCard'
 
-function ProductSkeleton() {
-  return (
-    <div className="rounded-2xl overflow-hidden animate-pulse" style={{ background: '#fff', border: '1px solid #F5EDD0' }}>
-      <div className="bg-stone-200 aspect-square" />
-      <div className="p-4 space-y-2">
-        <div className="h-3 bg-stone-200 rounded w-1/3" />
-        <div className="h-4 bg-stone-200 rounded w-4/5" />
-        <div className="h-5 bg-stone-200 rounded w-1/2" />
-      </div>
-    </div>
-  )
-}
-
-const BANNERS = ['/banners/banner1.png', '/banners/banner2.png']
-
-const PERKS = [
-  { icon: Truck,       title: 'Free Delivery',    desc: 'Within 24 hours' },
-  { icon: Shield,      title: '100% Authentic',   desc: 'All products verified' },
-  { icon: RefreshCw,   title: 'Easy Returns',     desc: 'Hassle-free exchanges' },
-  { icon: Headphones,  title: '24/7 Support',     desc: 'Always here to help' },
+/* ─── Hero Slides (Livish-style with big discount callouts) ─── */
+const HERO_SLIDES = [
+  {
+    img: '/images/luxury-perfumes.jpg',
+    title: 'Luxury Perfumes',
+    subtitle: 'Over 1,000 authentic fragrances from top global brands',
+    badge: 'Exclusively on Zosouq',
+    discount: '26',
+    cta: 'Shop Now',
+    link: '/category/perfumes',
+    gradient: 'from-gray-950/90 via-gray-950/60 to-gray-950/10',
+    badgeBg: 'bg-amber-500',
+    accentColor: 'text-amber-400',
+    subtitleColor: 'text-amber-200',
+  },
+  {
+    img: '/images/premium-makeup.jpg',
+    title: 'Premium Makeup',
+    subtitle: 'Beauty essentials for every skin tone and occasion',
+    badge: 'New Collection',
+    discount: '40',
+    cta: 'Shop Now',
+    link: '/category/makeup',
+    gradient: 'from-gray-950/90 via-gray-950/60 to-gray-950/10',
+    badgeBg: 'bg-rose-500',
+    accentColor: 'text-rose-400',
+    subtitleColor: 'text-rose-200',
+  },
+  {
+    img: '/images/body-care-essentials.jpg',
+    title: 'Body Care Essentials',
+    subtitle: 'Nourish, restore, and glow with premium treatments',
+    badge: 'Best Sellers',
+    discount: '35',
+    cta: 'Shop Now',
+    link: '/category/body-care',
+    gradient: 'from-gray-950/90 via-gray-950/60 to-gray-950/10',
+    badgeBg: 'bg-emerald-500',
+    accentColor: 'text-emerald-400',
+    subtitleColor: 'text-emerald-200',
+  },
 ]
 
-function SectionHeading({ eyebrow, title }) {
+/* ─── Circular Category Images (Livish-style) ─── */
+const CATEGORY_CIRCLES = {
+  'perfumes':      { img: '/images/designer-perfumes.jpg', bg: 'bg-violet-50', ring: 'ring-violet-200' },
+  'makeup':        { img: '/images/makeup-tools.jpg', bg: 'bg-pink-50', ring: 'ring-pink-200' },
+  'hair-care':     { img: '/images/styling-essentials.jpg', bg: 'bg-amber-50', ring: 'ring-amber-200' },
+  'body-care':     { img: '/images/body-care-essentials.jpg', bg: 'bg-emerald-50', ring: 'ring-emerald-200' },
+  'personal-care': { img: '/images/personal-care-circle.jpg', bg: 'bg-blue-50', ring: 'ring-blue-200' },
+}
+
+/* ─── "Shop by Price" badges (Livish-style) ─── */
+const PRICE_RANGES = [
+  { label: '3',  max: 3,  bg: 'from-amber-600 to-yellow-700' },
+  { label: '5',  max: 5,  bg: 'from-amber-700 to-yellow-800' },
+  { label: '10', max: 10, bg: 'from-amber-700 to-amber-800' },
+  { label: '15', max: 15, bg: 'from-amber-800 to-amber-900' },
+  { label: '20', max: 20, bg: 'from-amber-800 to-yellow-900' },
+  { label: '30', max: 30, bg: 'from-amber-900 to-yellow-950' },
+]
+
+/* ─── Quick-link bubbles (Livish-style extra categories) ─── */
+const QUICK_LINKS = [
+  { label: 'Deals',        link: '/category/perfumes',      img: '/images/deals.jpg', badge: '%' },
+  { label: 'Best Sellers',  link: '/category/personal-care', img: '/images/repair-restore.jpg' },
+  { label: 'New Arrivals',  link: '/category/makeup',        img: '/images/lip-collection.jpg' },
+  { label: 'Summer Sale',   link: '/category/body-care',     img: '/images/summer-sale.jpg', badge: '%' },
+  { label: 'Top Perfumes',  link: '/category/perfumes',      img: '/images/top-perfumes.jpg' },
+  { label: 'Hair Care',     link: '/category/hair-care',     img: '/images/hair-care-quick.jpg' },
+]
+
+const PERKS = [
+  { icon: Truck,      title: 'Free Delivery',  sub: 'All across Kuwait',    color: 'text-white', iconBg: 'bg-emerald-500', cardBg: 'bg-gradient-to-br from-emerald-50 to-teal-100', border: 'border-emerald-200', accent: 'text-emerald-700' },
+  { icon: Shield,     title: '100% Authentic',  sub: 'Verified products',    color: 'text-white', iconBg: 'bg-blue-500',    cardBg: 'bg-gradient-to-br from-blue-50 to-indigo-100',   border: 'border-blue-200',    accent: 'text-blue-700' },
+  { icon: RotateCcw,  title: 'Easy Returns',    sub: '14-day hassle-free',   color: 'text-white', iconBg: 'bg-amber-500',   cardBg: 'bg-gradient-to-br from-amber-50 to-orange-100',  border: 'border-amber-200',   accent: 'text-amber-700' },
+  { icon: Headphones, title: '24/7 Support',    sub: 'We are here to help',  color: 'text-white', iconBg: 'bg-purple-500',  cardBg: 'bg-gradient-to-br from-purple-50 to-violet-100', border: 'border-purple-200',  accent: 'text-purple-700' },
+]
+
+/* ────────────────────────────────────────────────────────
+   Product Carousel (with arrows like Livish)
+   ──────────────────────────────────────────────────────── */
+function ProductCarousel({ title, subtitle, linkTo, products, loading, accentColor, bg }) {
+  const ref = useRef(null)
+  const [canL, setCanL] = useState(false)
+  const [canR, setCanR] = useState(true)
+
+  const check = () => {
+    const el = ref.current; if (!el) return
+    setCanL(el.scrollLeft > 4)
+    setCanR(el.scrollLeft < el.scrollWidth - el.clientWidth - 4)
+  }
+  useEffect(check, [products, loading])
+  const go = d => { ref.current?.scrollBy({ left: d * 260, behavior: 'smooth' }); setTimeout(check, 400) }
+
   return (
-    <div className="text-center mb-10">
-      <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: '#C8A43A' }}>{eyebrow}</p>
-      <h2 className="text-3xl font-bold" style={{ color: '#1A0800', fontFamily: 'Georgia, serif' }}>{title}</h2>
-      <div className="gold-divider" />
-    </div>
+    <section className={`pt-6 pb-4 sm:pt-8 sm:pb-6 ${bg || ''}`}>
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+        {/* Header like Livish — bold title left, "Show All" button right */}
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{title}</h2>
+            {subtitle && <p className="text-gray-400 text-xs mt-1">{subtitle}</p>}
+          </div>
+          {linkTo && (
+            <Link to={linkTo} className="px-5 py-2 rounded-xl border-2 border-gray-800 text-sm font-semibold text-gray-800 hover:bg-gray-800 hover:text-white transition-all duration-300">
+              Show All
+            </Link>
+          )}
+        </div>
+
+        <div className="relative group">
+          {/* Left arrow */}
+          {canL && (
+            <button onClick={() => go(-1)} className="absolute -left-2 sm:-left-5 top-1/3 z-10 w-10 h-10 bg-gray-900 rounded-full shadow-xl flex items-center justify-center hover:scale-110 transition-all text-white">
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          )}
+          <div ref={ref} onScroll={check} className="flex gap-4 overflow-x-auto scroll-smooth no-scrollbar pb-2">
+            {loading
+              ? Array(6).fill(0).map((_, i) => (
+                  <div key={i} className="flex-shrink-0 w-[180px] sm:w-[220px] animate-pulse">
+                    <div className="bg-gray-100 rounded-2xl aspect-square" />
+                    <div className="mt-3 space-y-2"><div className="h-3 bg-gray-100 rounded w-4/5" /><div className="h-4 bg-gray-100 rounded w-1/2" /></div>
+                  </div>
+                ))
+              : products.map(p => (
+                  <div key={p.id} className="flex-shrink-0 w-[180px] sm:w-[220px]">
+                    <ProductCard product={p} accentColor={accentColor} />
+                  </div>
+                ))
+            }
+          </div>
+          {/* Right arrow */}
+          {canR && (
+            <button onClick={() => go(1)} className="absolute -right-2 sm:-right-5 top-1/3 z-10 w-10 h-10 bg-gray-900 rounded-full shadow-xl flex items-center justify-center hover:scale-110 transition-all text-white">
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+      </div>
+    </section>
   )
 }
 
+/* ═══════════════════════════════════════════════════════
+   H O M E   P A G E  (Livish-inspired)
+   ═══════════════════════════════════════════════════════ */
 export default function HomePage() {
-  const [categories, setCategories] = useState([])
-  const [featured, setFeatured] = useState([])
-  const [newArrivals, setNewArrivals] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [activeBanner, setActiveBanner] = useState(0)
+  const [categories, setCategories]     = useState([])
+  const [featured, setFeatured]         = useState([])
+  const [newArrivals, setNewArrivals]   = useState([])
+  const [trending, setTrending]         = useState([])
+  const [deals, setDeals]               = useState([])
+  const [topPerfumes, setTopPerfumes]   = useState([])
+  const [loading, setLoading]           = useState(true)
+  const [slide, setSlide]               = useState(0)
 
   useEffect(() => {
     Promise.all([
       getCategories(),
-      getProducts({ featured: true, limit: 8 }),
-      getProducts({ limit: 8, skip: 20 }),
-    ]).then(([cats, feat, newest]) => {
-      setCategories(cats)
-      setFeatured(feat)
-      setNewArrivals(newest)
+      getProducts({ featured: true, limit: 12 }),
+      getProducts({ limit: 12, skip: 15 }),
+      getProducts({ limit: 12, skip: 35 }),
+      getProducts({ limit: 10, skip: 55 }),
+      getProducts({ category_slug: 'perfumes', limit: 12 }),
+    ]).then(([cats, feat, newest, trend, dl, perfs]) => {
+      setCategories(cats); setFeatured(feat); setNewArrivals(newest); setTrending(trend); setDeals(dl); setTopPerfumes(perfs)
     }).finally(() => setLoading(false))
   }, [])
 
-  // Auto-advance banner every 5 seconds
   useEffect(() => {
-    const t = setInterval(() => setActiveBanner(b => (b + 1) % BANNERS.length), 5000)
+    const t = setInterval(() => setSlide(s => (s + 1) % HERO_SLIDES.length), 5000)
     return () => clearInterval(t)
   }, [])
 
-  const prevBanner = useCallback(() => setActiveBanner(b => (b - 1 + BANNERS.length) % BANNERS.length), [])
-  const nextBanner = useCallback(() => setActiveBanner(b => (b + 1) % BANNERS.length), [])
-
   return (
-    <div style={{ background: '#FAF6EF' }}>
+    <div className="bg-white">
 
-      {/* ── Banner Hero ─────────────────────────────────────── */}
-      <section className="relative overflow-hidden" style={{ background: '#FAF6EF' }}>
-        <div className="relative w-full" style={{ height: 'min(calc(100vw * 887 / 1774), 420px)' }}>
-          {BANNERS.map((src, i) => (
-            <div
-              key={i}
-              className="absolute inset-0 transition-opacity duration-700 overflow-hidden"
-              style={{ opacity: i === activeBanner ? 1 : 0, zIndex: i === activeBanner ? 1 : 0 }}
-            >
-              {/* Blurred fill for side gaps */}
-              <img src={src} aria-hidden="true"
-                className="absolute inset-0 w-full h-full object-cover scale-110 opacity-50"
-                style={{ filter: 'blur(24px)' }} />
-              {/* Sharp full banner — no cropping */}
-              <img src={src} alt={`Zosouq Banner ${i + 1}`}
-                className="relative w-full h-full object-contain z-10" />
+      {/* ════════════════════════════════════════════════
+          HERO CAROUSEL  (Livish-style with discount badge)
+          ════════════════════════════════════════════════ */}
+      <section className="relative overflow-hidden bg-white">
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-6 py-3 sm:py-5">
+          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl" style={{ height: 'clamp(260px, 38vw, 400px)' }}>
+            {HERO_SLIDES.map((s, i) => (
+              <div key={i} className="absolute inset-0 transition-all duration-[1200ms] ease-in-out"
+                style={{ opacity: i === slide ? 1 : 0, transform: i === slide ? 'scale(1)' : 'scale(1.04)' }}>
+                <img src={s.img} alt={s.title} className="absolute inset-0 w-full h-full object-cover" loading={i === 0 ? 'eager' : 'lazy'} />
+                <div className={`absolute inset-0 bg-gradient-to-r ${s.gradient}`} />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-950/50 via-transparent to-transparent" />
+                <div className="absolute inset-0 flex items-center">
+                  <div className="px-5 sm:px-12 w-full max-w-xl">
+                    <div className={`transition-all duration-700 ${i === slide ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
+                      style={{ transitionDelay: i === slide ? '300ms' : '0ms' }}>
+                      <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-[1.1] mb-2 drop-shadow-lg">
+                        {s.title}
+                      </h1>
+                      <p className={`${s.subtitleColor} text-sm sm:text-base font-medium mb-3 sm:mb-4 drop-shadow`}>{s.subtitle}</p>
+                      <div className={`inline-block ${s.badgeBg} text-white px-4 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold mb-3 sm:mb-4 shadow-lg`}>
+                        {s.badge}
+                      </div>
+                      <div className="flex items-end gap-1 mb-4 sm:mb-5">
+                        <span className={`text-5xl sm:text-7xl lg:text-8xl font-black leading-none tracking-tighter ${s.accentColor} drop-shadow-lg`}>{s.discount}</span>
+                        <div className="mb-0.5 sm:mb-1">
+                          <span className={`text-xl sm:text-3xl font-bold ${s.accentColor}`}>%</span>
+                          <span className="block text-[10px] sm:text-sm font-bold text-white/80 uppercase tracking-wider">OFF</span>
+                        </div>
+                      </div>
+                      <Link to={s.link}
+                        className="inline-flex items-center gap-2 bg-white text-gray-900 px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl text-sm font-semibold hover:bg-gray-100 hover:gap-3 transition-all shadow-xl active:scale-95">
+                        {s.cta} <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* Nav arrows */}
+            <button onClick={() => setSlide(s => (s - 1 + HERO_SLIDES.length) % HERO_SLIDES.length)}
+              className="absolute left-1 sm:left-5 top-1/2 -translate-y-1/2 z-10 w-7 h-7 sm:w-10 sm:h-10 bg-black/15 sm:bg-white/20 backdrop-blur-sm sm:backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/40 transition border border-white/5 sm:border-white/10 sm:shadow-md">
+              <ChevronLeft className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white/70 sm:text-white" />
+            </button>
+            <button onClick={() => setSlide(s => (s + 1) % HERO_SLIDES.length)}
+              className="absolute right-1 sm:right-5 top-1/2 -translate-y-1/2 z-10 w-7 h-7 sm:w-10 sm:h-10 bg-black/15 sm:bg-white/20 backdrop-blur-sm sm:backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/40 transition border border-white/5 sm:border-white/10 sm:shadow-md">
+              <ChevronRight className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white/70 sm:text-white" />
+            </button>
+
+            {/* Dots */}
+            <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2">
+              {HERO_SLIDES.map((_, i) => (
+                <button key={i} onClick={() => setSlide(i)}
+                  className={`h-2 sm:h-2.5 rounded-full transition-all duration-500 ${i === slide ? 'w-7 sm:w-8 bg-white shadow-md' : 'w-2 sm:w-2.5 bg-white/40 hover:bg-white/60'}`} />
+              ))}
             </div>
-          ))}
+          </div>
+        </div>
+      </section>
 
-          {/* Arrows */}
-          <button onClick={prevBanner}
-            className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-colors"
-            style={{ background: 'rgba(26,8,0,0.6)', color: '#C8A43A', border: '1px solid rgba(200,164,58,0.4)' }}
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <button onClick={nextBanner}
-            className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-colors"
-            style={{ background: 'rgba(26,8,0,0.6)', color: '#C8A43A', border: '1px solid rgba(200,164,58,0.4)' }}
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-
-          {/* Dots */}
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex gap-2">
-            {BANNERS.map((_, i) => (
-              <button key={i} onClick={() => setActiveBanner(i)}
-                className="w-8 h-1.5 rounded-full transition-all"
-                style={{ background: i === activeBanner ? '#C8A43A' : 'rgba(200,164,58,0.35)' }}
-              />
+      {/* ════════════════════════════════════════════════
+          QUICK-LINK CIRCLES  (Livish-style round bubbles)
+          ════════════════════════════════════════════════ */}
+      <section className="py-4 sm:py-5 bg-gradient-to-b from-white via-rose-50/30 to-white">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+          <div className="flex gap-6 sm:gap-10 overflow-x-auto no-scrollbar sm:justify-center py-2 px-2">
+            {QUICK_LINKS.map((ql) => (
+              <Link key={ql.label} to={ql.link} className="group flex flex-col items-center gap-2 flex-shrink-0">
+                <div className="relative w-[72px] h-[72px] sm:w-[100px] sm:h-[100px] rounded-full overflow-hidden ring-2 ring-gray-200 group-hover:ring-rose-400 transition-all duration-300 shadow-md group-hover:shadow-xl bg-white">
+                  <img src={ql.img} alt={ql.label} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+                  {ql.badge && (
+                    <div className="absolute top-0 right-0 w-6 h-6 sm:w-7 sm:h-7 bg-red-500 rounded-full flex items-center justify-center shadow-lg">
+                      <Percent className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
+                    </div>
+                  )}
+                </div>
+                <span className="text-xs sm:text-sm font-medium text-gray-700 text-center group-hover:text-rose-600 transition-colors">{ql.label}</span>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Perks bar ───────────────────────────────────────── */}
-      <section style={{ background: '#1A0800', borderTop: '1px solid rgba(200,164,58,0.2)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {PERKS.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(200,164,58,0.15)', border: '1px solid rgba(200,164,58,0.3)' }}>
-                  <Icon className="w-4 h-4" style={{ color: '#C8A43A' }} />
+      {/* ════════════════════════════════════════════════
+          SHOP BY CATEGORY  (Livish-style circle icons)
+          ════════════════════════════════════════════════ */}
+      <section className="pt-4 pb-8 sm:pt-6 sm:pb-12 bg-gradient-to-b from-rose-50/80 via-white to-violet-50/60">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+          <div className="text-center mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Shop by Category</h2>
+          </div>
+          {/* Mobile: horizontal scroll. Desktop: centered flex */}
+          <div className="flex sm:justify-center gap-6 sm:gap-12 overflow-x-auto no-scrollbar py-4 px-3">
+            {categories.map(cat => {
+              const vis = CATEGORY_CIRCLES[cat.slug] || { img: '', bg: 'bg-gray-50', ring: 'ring-gray-200' }
+              return (
+                <Link key={cat.id} to={`/category/${cat.slug}`}
+                  className="group flex flex-col items-center gap-2.5 flex-shrink-0 min-w-[72px]">
+                  <div className={`relative w-[72px] h-[72px] sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full overflow-hidden ring-[3px] sm:ring-4 ${vis.ring} shadow-lg group-hover:shadow-2xl transition-all duration-400 ${vis.bg}`}>
+                    <img src={vis.img} alt={cat.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+                  </div>
+                  <span className="text-xs sm:text-sm font-semibold text-gray-800 group-hover:text-rose-600 transition-colors text-center leading-tight">{cat.name}</span>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════
+          PERKS BAR
+          ════════════════════════════════════════════════ */}
+      <section className="py-3 sm:py-4 bg-gradient-to-r from-rose-50/60 via-white to-violet-50/60 border-y border-gray-100">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+          <div className="flex overflow-x-auto no-scrollbar gap-2 sm:gap-3">
+            {PERKS.map(({ icon: Icon, title, sub, color, iconBg, cardBg, border, accent }) => (
+              <div key={title} className={`${cardBg} ${border} border rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 flex items-center gap-2.5 flex-1 min-w-[160px] group hover:shadow-md transition-all duration-300`}>
+                <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg} shadow-sm transition-transform duration-300 group-hover:scale-110`}>
+                  <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${color}`} />
                 </div>
-                <div>
-                  <p className="text-sm font-semibold" style={{ color: '#C8A43A' }}>{title}</p>
-                  <p className="text-xs" style={{ color: '#A08050' }}>{desc}</p>
+                <div className="min-w-0">
+                  <p className={`text-xs sm:text-sm font-bold ${accent} truncate`}>{title}</p>
+                  <p className="text-[10px] sm:text-xs text-gray-500 truncate">{sub}</p>
                 </div>
               </div>
             ))}
@@ -132,110 +315,323 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Categories ──────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <SectionHeading eyebrow="Browse our collections" title="Shop by Category" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          {categories.map(cat => (
-            <Link key={cat.id} to={`/category/${cat.slug}`}
-              className="group flex flex-col items-center gap-3 p-5 rounded-2xl border text-center transition-all duration-200 hover:-translate-y-1"
-              style={{ background: '#fff', borderColor: '#F0E6CE' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#C8A43A'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(200,164,58,0.15)' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = '#F0E6CE'; e.currentTarget.style.boxShadow = 'none' }}
-            >
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl transition-transform group-hover:scale-110"
-                style={{ background: 'linear-gradient(135deg, #FDF8EE, #F8EDCA)' }}>
-                {cat.icon}
-              </div>
-              <span className="text-sm font-semibold" style={{ color: '#1A0800' }}>{cat.name}</span>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {/* ════════════════════════════════════════════════
+          BEST SELLERS  (carousel)
+          ════════════════════════════════════════════════ */}
+      <ProductCarousel
+        title="Best Sellers"
+        subtitle="Most loved by our customers"
+        linkTo="/category/personal-care"
+        products={featured}
+        loading={loading}
+        accentColor="#e11d48"
+        bg="bg-gradient-to-b from-rose-50/50 via-white to-violet-50/30"
+      />
 
-      {/* ── Featured Products ────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14">
-        <div className="flex items-end justify-between mb-2">
-          <SectionHeading eyebrow="Handpicked for you" title="Featured Products" />
-          <Link to="/category/personal-care" className="hidden sm:flex items-center gap-1 text-sm font-semibold mb-4 transition-colors"
-            style={{ color: '#C8A43A' }}>
-            View all <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
-          {loading ? Array(8).fill(0).map((_, i) => <ProductSkeleton key={i} />)
-                   : featured.map(p => <ProductCard key={p.id} product={p} />)}
-        </div>
-      </section>
-
-      {/* ── Mid Banner ──────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14">
-        <Link to="/category/perfumes">
-          <div className="relative rounded-3xl overflow-hidden cursor-pointer group"
-            style={{ border: '1px solid rgba(200,164,58,0.3)' }}>
-            <img src="/banners/banner2.png" alt="Up to 70% off"
-              className="w-full object-cover transition-transform duration-700 group-hover:scale-105"
-              style={{ maxHeight: 320 }}
-            />
+      {/* ════════════════════════════════════════════════
+          SHOP BY PRICE  (Livish-style "Under X KWD" badges)
+          ════════════════════════════════════════════════ */}
+      <section className="pt-0 pb-6 sm:pt-0 sm:pb-8 bg-gradient-to-b from-violet-50/40 via-white to-amber-50/30">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Shop by Price</h2>
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-4">
+            {PRICE_RANGES.map(pr => (
+              <Link key={pr.label} to={`/search?max_price=${pr.max}`}
+                className="group relative rounded-2xl overflow-hidden aspect-square flex flex-col items-center justify-center shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+                <div className={`absolute inset-0 bg-gradient-to-br ${pr.bg}`} />
+                {/* Subtle texture pattern */}
+                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 20px)' }} />
+                <div className="relative z-10 text-center text-white">
+                  <p className="text-xs sm:text-sm font-semibold opacity-90 tracking-wider uppercase">Under</p>
+                  <p className="text-3xl sm:text-4xl lg:text-5xl font-black leading-none my-1">{pr.label}</p>
+                  <p className="text-xs sm:text-sm font-bold tracking-widest">KWD</p>
+                </div>
+              </Link>
+            ))}
           </div>
-        </Link>
-      </section>
-
-      {/* ── New Arrivals ─────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14">
-        <div className="flex items-end justify-between mb-2">
-          <SectionHeading eyebrow="Just in" title="New Arrivals" />
-          <Link to="/category/makeup" className="hidden sm:flex items-center gap-1 text-sm font-semibold mb-4 transition-colors"
-            style={{ color: '#C8A43A' }}>
-            View all <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
-          {loading ? Array(8).fill(0).map((_, i) => <ProductSkeleton key={i} />)
-                   : newArrivals.map(p => <ProductCard key={p.id} product={p} />)}
         </div>
       </section>
 
-      {/* ── Category Highlights ──────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14">
-        <SectionHeading eyebrow="Explore" title="Top Collections" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { slug: 'perfumes',     label: 'Perfumes',     emoji: '🌸', sub: '1000+ fragrances' },
-            { slug: 'makeup',       label: 'Makeup',       emoji: '💄', sub: '870+ products' },
-            { slug: 'hair-care',    label: 'Hair Care',    emoji: '💇', sub: '380+ treatments' },
-            { slug: 'body-care',    label: 'Body Care',    emoji: '🧴', sub: '300+ products' },
-          ].map(c => (
-            <Link key={c.slug} to={`/category/${c.slug}`}
-              className="group relative rounded-2xl overflow-hidden p-6 flex flex-col gap-1 transition-all hover:-translate-y-1"
-              style={{ background: 'linear-gradient(135deg, #1A0800 0%, #3D1800 100%)', border: '1px solid rgba(200,164,58,0.25)' }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = '#C8A43A'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(200,164,58,0.25)'}
-            >
-              <span className="text-4xl mb-1">{c.emoji}</span>
-              <p className="font-bold text-lg" style={{ color: '#C8A43A', fontFamily: 'Georgia, serif' }}>{c.label}</p>
-              <p className="text-xs" style={{ color: '#A08050' }}>{c.sub}</p>
-              <ArrowRight className="w-4 h-4 mt-2 transition-transform group-hover:translate-x-1" style={{ color: '#C8A43A' }} />
+      {/* ════════════════════════════════════════════════
+          SALE POSTERS — Two-column (Livish-style promo)
+          ════════════════════════════════════════════════ */}
+      <section className="py-4 sm:py-6">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Sale Banner 1 */}
+            <Link to="/category/perfumes"
+              className="group relative rounded-2xl overflow-hidden flex items-end" style={{ minHeight: '200px' }}>
+              <img src="/images/luxury-perfumes.jpg" alt="Perfume sale"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-950/85 via-gray-950/40 to-transparent" />
+              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
+                <div className="bg-red-600 text-white px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold flex items-center gap-1 sm:gap-1.5 shadow-lg">
+                  <Percent className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> UP TO 70% OFF
+                </div>
+              </div>
+              <div className="relative z-10 p-5 sm:p-7">
+                <p className="text-white/50 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1">Exclusive Deals</p>
+                <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">
+                  Luxury Perfumes<br/>at Unbeatable Prices
+                </h3>
+                <span className="inline-flex items-center gap-1.5 text-white text-xs sm:text-sm font-semibold mt-2 sm:mt-3 group-hover:gap-2.5 transition-all">
+                  Shop the Sale <ArrowRight className="w-4 h-4" />
+                </span>
+              </div>
             </Link>
-          ))}
+
+            {/* Sale Banner 2 */}
+            <Link to="/category/hair-care"
+              className="group relative rounded-2xl overflow-hidden flex items-end" style={{ minHeight: '200px' }}>
+              <img src="/images/hair-care-category.jpg" alt="Hair care deals"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-950/85 via-gray-950/40 to-transparent" />
+              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
+                <div className="bg-amber-600 text-white px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold flex items-center gap-1 sm:gap-1.5 shadow-lg">
+                  <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> NEW SEASON
+                </div>
+              </div>
+              <div className="relative z-10 p-5 sm:p-7">
+                <p className="text-white/50 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1">Fresh Arrivals</p>
+                <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">
+                  Hair Care<br/>Essentials
+                </h3>
+                <span className="inline-flex items-center gap-1.5 text-white text-xs sm:text-sm font-semibold mt-2 sm:mt-3 group-hover:gap-2.5 transition-all">
+                  Browse Collection <ArrowRight className="w-4 h-4" />
+                </span>
+              </div>
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* ── Newsletter ───────────────────────────────────────── */}
-      <section style={{ background: '#1A0800', borderTop: '1px solid rgba(200,164,58,0.2)' }}>
-        <div className="max-w-xl mx-auto px-4 py-14 text-center">
-          <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: '#C8A43A' }}>Stay Connected</p>
-          <h2 className="text-3xl font-bold mb-2" style={{ color: '#F5EDD0', fontFamily: 'Georgia, serif' }}>Join the Zosouq Family</h2>
-          <p className="text-sm mb-8" style={{ color: '#A08050' }}>Get exclusive deals, new arrivals and beauty tips delivered to your inbox.</p>
-          <form className="flex gap-3" onSubmit={e => e.preventDefault()}>
-            <input type="email" placeholder="Enter your email address"
-              className="flex-1 text-sm rounded-xl px-4 py-3 focus:outline-none border"
-              style={{ background: 'rgba(255,255,255,0.07)', borderColor: 'rgba(200,164,58,0.3)', color: '#F5EDD0' }}
-            />
-            <button type="submit" className="btn-primary whitespace-nowrap">Subscribe</button>
-          </form>
+      {/* ════════════════════════════════════════════════
+          NEW ARRIVALS (carousel)
+          ════════════════════════════════════════════════ */}
+      <ProductCarousel
+        title="New Arrivals"
+        subtitle="The latest additions to our collection"
+        linkTo="/category/makeup"
+        products={newArrivals}
+        loading={loading}
+        accentColor="#7c3aed"
+        bg="bg-gradient-to-b from-violet-50/40 via-white to-rose-50/30"
+      />
+
+      {/* ════════════════════════════════════════════════
+          FREE DELIVERY POSTER (Full-width banner)
+          ════════════════════════════════════════════════ */}
+      <section className="py-6 sm:py-8">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden group" style={{ minHeight: 'clamp(280px, 45vw, 340px)' }}>
+            <img src="/images/free-delivery.jpg" alt="Free delivery across Kuwait"
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-[1.02]" />
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/90 via-emerald-900/70 to-emerald-900/40" />
+            <div className="absolute inset-0 flex items-center">
+              <div className="px-5 sm:px-12 max-w-lg">
+                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-white/15 flex items-center justify-center">
+                    <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  </div>
+                  <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-white/15 flex items-center justify-center">
+                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  </div>
+                  <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-white/15 flex items-center justify-center">
+                    <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  </div>
+                </div>
+                <h2 className="text-xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 leading-tight">
+                  Free Delivery<br/>Anywhere in Kuwait
+                </h2>
+                <p className="text-white/60 text-xs sm:text-sm mb-4 sm:mb-5">Every order ships free, no minimums. Next-day delivery. Cash on delivery available.</p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="bg-white/10 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10">All Kuwait Areas</span>
+                  <span className="bg-white/10 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10">Next-Day Delivery</span>
+                  <span className="bg-white/10 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10">Cash on Delivery</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
-    </div>
+
+      {/* ════════════════════════════════════════════════
+          TOP SELLING PERFUMES  (Livish-style section)
+          ════════════════════════════════════════════════ */}
+      <ProductCarousel
+        title="Top Selling Perfumes"
+        subtitle="Most popular fragrances in Kuwait"
+        linkTo="/category/perfumes"
+        products={topPerfumes}
+        loading={loading}
+        accentColor="#8b5cf6"
+        bg="bg-gradient-to-b from-amber-50/40 via-white to-violet-50/30"
+      />
+
+      {/* ════════════════════════════════════════════════
+          EXCLUSIVE COLLECTION POSTER
+          ════════════════════════════════════════════════ */}
+      <section className="py-4 sm:py-6">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden group" style={{ minHeight: 'clamp(280px, 40vw, 380px)' }}>
+            <img src="/images/exclusive-collection.jpg"
+              alt="Exclusive perfume collection"
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-[1.03]" />
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-950/90 via-gray-950/60 to-gray-950/30" />
+            <div className="absolute inset-0 flex items-center">
+              <div className="px-5 sm:px-12 max-w-lg">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm text-white/80 text-[10px] sm:text-xs font-semibold mb-3 sm:mb-4 border border-white/10">
+                  <Award className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Exclusive Collection
+                </div>
+                <h2 className="text-xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 leading-tight">
+                  Luxury Perfumes<br/>Under One Roof
+                </h2>
+                <p className="text-white/60 text-xs sm:text-sm mb-4 sm:mb-5">Authentic fragrances from Arabian and international brands.</p>
+                <Link to="/category/perfumes"
+                  className="inline-flex items-center gap-2 bg-white text-gray-900 px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold hover:bg-gray-100 transition-all shadow-lg hover:gap-3 active:scale-95">
+                  Explore Collection <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════
+          TRENDING NOW (carousel)
+          ════════════════════════════════════════════════ */}
+      <ProductCarousel
+        title="Trending Now"
+        subtitle="What everyone is adding to their cart"
+        linkTo="/category/perfumes"
+        products={trending}
+        loading={loading}
+        accentColor="#ea580c"
+        bg="bg-gradient-to-b from-rose-50/40 via-white to-amber-50/30"
+      />
+
+      {/* ════════════════════════════════════════════════
+          MEGA SALE POSTER  (3-column grid)
+          ════════════════════════════════════════════════ */}
+      <section className="py-6 sm:py-8">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 gap-4">
+            {/* Big Sale Card */}
+            <Link to="/category/makeup" className="group relative rounded-2xl overflow-hidden flex items-center" style={{ minHeight: 'clamp(220px, 35vw, 280px)' }}>
+              <img src="/images/makeup-collection.jpg" alt="Makeup sale"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              <div className="absolute inset-0 bg-gradient-to-r from-rose-900/90 via-rose-900/60 to-rose-900/20" />
+              <div className="relative z-10 p-5 sm:p-10">
+                <div className="bg-red-600 text-white px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold inline-flex items-center gap-1 sm:gap-1.5 mb-2 sm:mb-3 shadow-md">
+                  <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> FLASH SALE
+                </div>
+                <h3 className="text-xl sm:text-3xl font-bold text-white mb-1 leading-tight">
+                  Up to 50% Off<br/>Premium Makeup
+                </h3>
+                <p className="text-white/50 text-xs sm:text-sm mb-3 sm:mb-4 max-w-sm">Limited time only. Foundation, lipstick, eyeshadow and more.</p>
+                <span className="inline-flex items-center gap-2 bg-white text-gray-900 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold hover:bg-gray-100 transition-all shadow-lg group-hover:gap-3">
+                  Shop Now <ArrowRight className="w-4 h-4" />
+                </span>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════
+          THIS WEEK'S DEALS (grid)
+          ════════════════════════════════════════════════ */}
+      <section className="pt-6 pb-8 sm:pt-8 sm:pb-12 bg-gradient-to-b from-amber-50/60 via-white to-rose-50/40">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-100 text-red-600 text-xs font-bold mb-2">
+                <Zap className="w-3.5 h-3.5" /> Limited Time Offers
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">This Week's Deals</h2>
+            </div>
+            <Link to="/category/body-care" className="px-5 py-2 rounded-xl border-2 border-gray-800 text-sm font-semibold text-gray-800 hover:bg-gray-800 hover:text-white transition-all duration-300">
+              Show All
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            {loading
+              ? Array(5).fill(0).map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="bg-white rounded-2xl aspect-square" />
+                    <div className="mt-3 space-y-2"><div className="h-3 bg-gray-200 rounded w-3/4" /><div className="h-4 bg-gray-200 rounded w-1/2" /></div>
+                  </div>
+                ))
+              : deals.slice(0, 5).map(p => <ProductCard key={p.id} product={p} />)
+            }
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════
+          HANDPICKED PRODUCTS (grid)
+          ════════════════════════════════════════════════ */}
+      <section className="pt-6 pb-8 sm:pt-8 sm:pb-12 bg-gradient-to-b from-rose-50/50 via-white to-violet-50/40">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Handpicked For You</h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+            {loading
+              ? Array(12).fill(0).map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="bg-gray-100 rounded-2xl aspect-square" />
+                    <div className="mt-3 space-y-2"><div className="h-3 bg-gray-100 rounded w-4/5" /><div className="h-4 bg-gray-100 rounded w-1/2" /></div>
+                  </div>
+                ))
+              : [...featured, ...newArrivals].slice(0, 12).map(p => <ProductCard key={p.id} product={p} />)
+            }
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════
+          BRAND STORY / TRUST SECTION
+          ════════════════════════════════════════════════ */}
+      <section className="relative overflow-hidden bg-gray-950 py-14 sm:py-20">
+        <img src="/images/brand-story.jpg"
+          alt="" className="absolute inset-0 w-full h-full object-cover opacity-15" />
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-gray-950/80 to-gray-950/50" />
+        <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/60 text-xs font-semibold mb-5">
+                <Shield className="w-3.5 h-3.5" /> Why Choose Zosouq
+              </div>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 leading-tight">
+                Kuwait's Most Trusted<br/>Beauty Destination
+              </h2>
+              <p className="text-gray-400 leading-relaxed mb-8 text-sm max-w-lg">
+                We source every product directly from authorized distributors. 100% authentic, beautifully packaged, delivered to your doorstep within 24 hours.
+              </p>
+              <div className="grid grid-cols-3 gap-6 sm:gap-10">
+                {[
+                  { n: '4,400+', l: 'Products' },
+                  { n: '15K+', l: 'Happy Customers' },
+                  { n: '24hrs', l: 'Delivery' },
+                ].map(s => (
+                  <div key={s.l}>
+                    <p className="text-2xl sm:text-3xl font-bold text-rose-400">{s.n}</p>
+                    <p className="text-xs text-gray-500 mt-1">{s.l}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="hidden lg:grid grid-cols-2 gap-4">
+              <img src="/images/makeup-tools.jpg"
+                alt="Perfume collection" className="rounded-2xl object-cover w-full h-60 shadow-2xl ring-1 ring-white/10" />
+              <img src="/images/makeup-collection.jpg"
+                alt="Makeup collection" className="rounded-2xl object-cover w-full h-60 mt-8 shadow-2xl ring-1 ring-white/10" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+</div>
   )
 }

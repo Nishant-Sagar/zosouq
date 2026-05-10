@@ -1,52 +1,58 @@
 import { Link } from 'react-router-dom'
-import { MapPin, Phone, Mail, Facebook, Instagram, Twitter } from 'lucide-react'
+import { MapPin, Phone, Mail, Heart } from 'lucide-react'
 
 export default function Footer() {
   return (
-    <footer style={{ background: '#0D0400', color: '#A08050', borderTop: '1px solid rgba(200,164,58,0.2)' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+    <footer className="bg-gray-900 text-gray-300 sm:block hidden">
+      {/* Gradient accent stripe */}
+      <div className="h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500" />
 
-          {/* Brand */}
-          <div>
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-12 lg:py-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
+
+          {/* Brand + Contact */}
+          <div className="col-span-2 md:col-span-1">
             <Link to="/" className="inline-block mb-4">
-              <p className="text-3xl font-bold tracking-widest uppercase" style={{ color: '#C8A43A', fontFamily: 'Georgia, serif' }}>
+              <span className="text-2xl font-bold text-white" style={{ fontFamily: 'Georgia, serif' }}>
                 Zosouq
-              </p>
-              <p className="text-xs tracking-widest uppercase" style={{ color: '#C8A43A', opacity: 0.6 }}>
-                Luxury · Beauty · Fashion
-              </p>
+              </span>
             </Link>
-            <p className="text-sm leading-relaxed mb-5">
-              Your premium destination for authentic luxury perfumes, beauty, skincare and fashion accessories in Kuwait.
+            <p className="text-sm text-gray-400 mb-4 leading-relaxed">
+              Kuwait's trusted destination for authentic beauty, skincare & fragrances.
             </p>
-            <div className="flex gap-3">
-              {[Facebook, Instagram, Twitter].map((Icon, i) => (
-                <a key={i} href="#"
-                  className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors"
-                  style={{ background: 'rgba(200,164,58,0.1)', border: '1px solid rgba(200,164,58,0.2)' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(200,164,58,0.25)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(200,164,58,0.1)'}
-                >
-                  <Icon className="w-4 h-4" style={{ color: '#C8A43A' }} />
+            <ul className="space-y-2.5 text-sm text-gray-400">
+              <li className="flex items-center gap-2"><MapPin className="w-4 h-4 text-pink-400" /> Kuwait City</li>
+              <li className="flex items-center gap-2"><Mail className="w-4 h-4 text-pink-400" /> support@zosouq.com</li>
+              <li className="flex items-center gap-2"><Phone className="w-4 h-4 text-pink-400" /> +965 XXXX XXXX</li>
+            </ul>
+
+            {/* Social */}
+            <div className="flex gap-3 mt-5">
+              {[
+                { name: 'Facebook', abbr: 'F', color: 'hover:bg-blue-600' },
+                { name: 'Instagram', abbr: 'I', color: 'hover:bg-gradient-to-tr hover:from-yellow-500 hover:via-pink-500 hover:to-purple-600' },
+                { name: 'Twitter', abbr: 'X', color: 'hover:bg-sky-500' },
+              ].map(s => (
+                <a key={s.name} href="#"
+                  className={`w-9 h-9 rounded-full bg-gray-800 flex items-center justify-center text-xs font-bold text-gray-400 hover:text-white transition-all duration-300 ${s.color}`}>
+                  {s.abbr}
                 </a>
               ))}
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Useful Links */}
           <div>
-            <h3 className="font-semibold mb-4 text-sm uppercase tracking-widest" style={{ color: '#C8A43A' }}>Quick Links</h3>
+            <h4 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Useful Links</h4>
             <ul className="space-y-2.5">
               {[
                 { label: 'Home', to: '/' },
                 { label: 'My Cart', to: '/cart' },
                 { label: 'Track Order', to: '#' },
-              ].map(link => (
-                <li key={link.label}>
-                  <Link to={link.to} className="text-sm transition-colors hover:text-amber-400" style={{ color: '#A08050' }}>
-                    {link.label}
-                  </Link>
+                { label: 'Contact', to: '#' },
+              ].map(l => (
+                <li key={l.label}>
+                  <Link to={l.to} className="text-sm text-gray-400 hover:text-pink-400 transition-colors">{l.label}</Link>
                 </li>
               ))}
             </ul>
@@ -54,52 +60,34 @@ export default function Footer() {
 
           {/* Categories */}
           <div>
-            <h3 className="font-semibold mb-4 text-sm uppercase tracking-widest" style={{ color: '#C8A43A' }}>Categories</h3>
+            <h4 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Categories</h4>
             <ul className="space-y-2.5">
               {[
-                ['Body Care',     'body-care'],
-                ['Hair Care',     'hair-care'],
-                ['Makeup',        'makeup'],
+                ['Perfumes', 'perfumes'],
+                ['Makeup', 'makeup'],
+                ['Hair Care', 'hair-care'],
+                ['Body Care', 'body-care'],
                 ['Personal Care', 'personal-care'],
-                ['Perfumes',      'perfumes'],
               ].map(([name, slug]) => (
                 <li key={slug}>
-                  <Link to={`/category/${slug}`} className="text-sm transition-colors hover:text-amber-400" style={{ color: '#A08050' }}>
-                    {name}
-                  </Link>
+                  <Link to={`/category/${slug}`} className="text-sm text-gray-400 hover:text-pink-400 transition-colors">{name}</Link>
                 </li>
               ))}
             </ul>
           </div>
-
-          {/* Contact */}
-          <div>
-            <h3 className="font-semibold mb-4 text-sm uppercase tracking-widest" style={{ color: '#C8A43A' }}>Contact</h3>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#C8A43A' }} />
-                <span className="text-sm">Kuwait City, Kuwait</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone className="w-4 h-4 flex-shrink-0" style={{ color: '#C8A43A' }} />
-                <span className="text-sm">+965 XXXX XXXX</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Mail className="w-4 h-4 flex-shrink-0" style={{ color: '#C8A43A' }} />
-                <span className="text-sm">support@zosouq.com</span>
-              </li>
-            </ul>
-          </div>
         </div>
 
-        <div className="mt-10 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4"
-          style={{ borderTop: '1px solid rgba(200,164,58,0.15)' }}>
-          <p className="text-xs" style={{ color: '#60402A' }}>© 2025 Zosouq. All rights reserved.</p>
+        {/* Bottom */}
+        <div className="mt-10 pt-6 border-t border-gray-800 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <p className="text-xs text-gray-500 flex items-center gap-1">
+            © 2025 Zosouq. Made with <Heart className="w-3 h-3 text-pink-500 fill-pink-500" /> in Kuwait
+          </p>
           <div className="flex items-center gap-2">
-            <span className="text-xs" style={{ color: '#60402A' }}>Payment:</span>
-            <span className="px-3 py-1 rounded-lg text-xs font-medium"
-              style={{ background: 'rgba(200,164,58,0.1)', color: '#C8A43A', border: '1px solid rgba(200,164,58,0.2)' }}>
-              💵 Cash on Delivery
+            <span className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800 text-gray-400 border border-gray-700 flex items-center gap-1">
+              Cash on Delivery
+            </span>
+            <span className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800 text-gray-400 border border-gray-700 flex items-center gap-1">
+              Free Shipping
             </span>
           </div>
         </div>

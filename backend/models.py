@@ -13,6 +13,7 @@ class Category(Base):
     description = Column(Text, nullable=True)
     image_url = Column(String, nullable=True)
     icon = Column(String, nullable=True)
+    sort_order = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
 
     products = relationship("Product", back_populates="category")

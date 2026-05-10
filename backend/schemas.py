@@ -18,6 +18,7 @@ class CategoryCreate(CategoryBase):
 class Category(CategoryBase):
     id: int
     is_active: bool
+    product_count: Optional[int] = None
 
     class Config:
         from_attributes = True

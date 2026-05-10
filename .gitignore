@@ -9,9 +9,19 @@ backend/venv/
 
 # Local database
 backend/ecommerce.db
+backend/zosouq.db
+ecommerce.db
+*.db
 
 # Scraped product image archives
 Extras/*_images/
+
+# Downloaded product images
+frontend/public/products/
+frontend/public/images/
+
+# Virtual environment
+.venv/
 
 # Node
 frontend/node_modules/

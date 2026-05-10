@@ -32,7 +32,7 @@ export default function OrderConfirmationPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-gray-900 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -41,7 +41,7 @@ export default function OrderConfirmationPage() {
     return (
       <div className="text-center py-20">
         <h2 className="text-xl font-bold mb-4">Order not found</h2>
-        <Link to="/" className="btn-primary">Go Home</Link>
+        <Link to="/" className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all active:scale-95">Go Home</Link>
       </div>
     )
   }
@@ -63,10 +63,10 @@ export default function OrderConfirmationPage() {
       </div>
 
       {/* Order Number */}
-      <div className="card p-5 mb-6 flex items-center justify-between">
+      <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6 flex items-center justify-between">
         <div>
-          <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Order Number</p>
-          <p className="text-2xl font-bold text-primary-600 font-mono">{order.order_number}</p>
+          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Order Number</p>
+          <p className="text-2xl font-bold text-gray-900 font-mono">{order.order_number}</p>
         </div>
         <button
           onClick={copyOrderNumber}
@@ -77,13 +77,13 @@ export default function OrderConfirmationPage() {
       </div>
 
       {/* Status Tracker */}
-      <div className="card p-6 mb-6">
-        <h2 className="font-bold text-slate-900 mb-6">Order Status</h2>
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
+        <h2 className="font-bold text-gray-900 mb-6">Order Status</h2>
         <div className="relative">
           {/* Progress line */}
           <div className="absolute top-5 left-5 right-5 h-0.5 bg-slate-200" />
           <div
-            className="absolute top-5 left-5 h-0.5 bg-primary-600 transition-all duration-500"
+            className="absolute top-5 left-5 h-0.5 bg-gray-900 transition-all duration-500"
             style={{ width: `${(stepIndex / (STATUS_STEPS.length - 1)) * 100}%`, right: 'auto' }}
           />
           <div className="relative grid grid-cols-4 gap-2">
@@ -93,11 +93,11 @@ export default function OrderConfirmationPage() {
               return (
                 <div key={step.key} className="flex flex-col items-center text-center">
                   <div className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
-                    done ? 'bg-primary-600 border-primary-600' : 'bg-white border-slate-200'
+                    done ? 'bg-gray-900 border-gray-900' : 'bg-white border-gray-200'
                   }`}>
-                    <Icon className={`w-4 h-4 ${done ? 'text-white' : 'text-slate-400'}`} />
+                    <Icon className={`w-4 h-4 ${done ? 'text-white' : 'text-gray-400'}`} />
                   </div>
-                  <p className={`text-xs font-medium mt-2 ${done ? 'text-primary-700' : 'text-slate-400'}`}>
+                  <p className={`text-xs font-medium mt-2 ${done ? 'text-gray-900' : 'text-gray-400'}`}>
                     {step.label}
                   </p>
                 </div>
@@ -114,8 +114,8 @@ export default function OrderConfirmationPage() {
       </div>
 
       {/* Order Items */}
-      <div className="card p-6 mb-6">
-        <h2 className="font-bold text-slate-900 mb-4">Items Ordered</h2>
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
+        <h2 className="font-bold text-gray-900 mb-4">Items Ordered</h2>
         <div className="space-y-4">
           {order.items.map(item => (
             <div key={item.id} className="flex gap-3">
@@ -139,13 +139,13 @@ export default function OrderConfirmationPage() {
         </div>
         <div className="border-t border-slate-100 mt-4 pt-4 flex justify-between">
           <span className="font-bold text-slate-900">Total</span>
-          <span className="text-xl font-extrabold text-primary-600">{formatPrice(order.total_amount)}</span>
+          <span className="text-xl font-extrabold text-gray-900">{formatPrice(order.total_amount)}</span>
         </div>
       </div>
 
       {/* Delivery Details */}
-      <div className="card p-6 mb-8">
-        <h2 className="font-bold text-slate-900 mb-4">Delivery Details</h2>
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-8">
+        <h2 className="font-bold text-gray-900 mb-4">Delivery Details</h2>
         <div className="grid sm:grid-cols-2 gap-4 text-sm">
           <div>
             <p className="text-slate-500 mb-0.5">Name</p>
@@ -161,7 +161,7 @@ export default function OrderConfirmationPage() {
           </div>
           <div>
             <p className="text-slate-500 mb-0.5">Payment</p>
-            <p className="font-medium text-emerald-600">💵 Cash on Delivery</p>
+            <p className="font-medium text-emerald-600">Cash on Delivery</p>
           </div>
           <div className="sm:col-span-2">
             <p className="text-slate-500 mb-0.5">Delivery Address</p>
@@ -178,7 +178,7 @@ export default function OrderConfirmationPage() {
 
       {/* CTA */}
       <div className="text-center">
-        <Link to="/" className="btn-primary text-base px-10 py-4">
+        <Link to="/" className="inline-flex items-center gap-2 bg-gray-900 text-white px-10 py-4 rounded-xl text-base font-semibold hover:bg-gray-800 transition-all shadow-lg active:scale-95">
           Continue Shopping <ArrowRight className="w-5 h-5" />
         </Link>
         <p className="text-sm text-slate-400 mt-4">

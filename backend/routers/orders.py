@@ -62,3 +62,16 @@ def get_order(order_number: str, db: Session = Depends(get_db)):
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     return order
+
+
+@router.get("/", response_model=list[schemas.Order])
+def search_orders(email: str = None, phone: str = None, db: Session = Depends(get_db)):
+    if not email and not phone:
+        raise HTTPException(status_code=400, detail="Provide email or phone to search orders")
+    query = db.query(models.Order)
+    if email:
+        query = query.filter(models.Order.customer_email == email)
+    if phone:
+        query = query.filter(models.Order.customer_phone == phone)
+    orders = query.order_by(models.Order.created_at.desc()).all()
+    return orders
