@@ -73,12 +73,20 @@ export default function Navbar() {
             </button>
 
             {/* Logo */}
-            <Link to="/" className="flex-shrink-0 flex items-center gap-2">
-              <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-pink-200">
-                Z
-              </span>
-              <span className="text-xl sm:text-2xl font-bold tracking-wider text-gray-900"
-                style={{ fontFamily: 'Georgia, serif' }}>
+            <Link to="/" className="flex-shrink-0 flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 via-fuchsia-500 to-violet-600 shadow-lg shadow-pink-300/50 flex items-center justify-center flex-shrink-0">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M3.5 4H16.5L3.5 16H16.5" stroke="white" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <span className="text-xl sm:text-2xl font-bold italic tracking-wide"
+                style={{
+                  fontFamily: 'Georgia, serif',
+                  background: 'linear-gradient(135deg, #f43f5e 0%, #c026d3 50%, #7c3aed 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}>
                 Zosouq
               </span>
             </Link>
@@ -181,11 +189,22 @@ export default function Navbar() {
             onClick={e => e.stopPropagation()}>
             {/* Menu header */}
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
-                  Z
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 via-fuchsia-500 to-violet-600 shadow-lg shadow-pink-300/50 flex items-center justify-center flex-shrink-0">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M3.5 4H16.5L3.5 16H16.5" stroke="white" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <span className="text-lg font-bold italic"
+                  style={{
+                    fontFamily: 'Georgia, serif',
+                    background: 'linear-gradient(135deg, #f43f5e 0%, #c026d3 50%, #7c3aed 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}>
+                  Zosouq
                 </span>
-                <span className="text-lg font-bold text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>Zosouq</span>
               </div>
               <button onClick={() => setMobileOpen(false)} className="p-1.5 rounded-full text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-all">
                 <X className="w-5 h-5" />
