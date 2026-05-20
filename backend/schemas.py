@@ -90,6 +90,7 @@ class Order(BaseModel):
     address: str
     city: str
     notes: Optional[str] = None
+    shipping_fee: float = 0.0
     total_amount: float
     status: str
     payment_method: str

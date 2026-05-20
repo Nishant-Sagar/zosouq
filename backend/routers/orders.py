@@ -8,6 +8,9 @@ import string
 
 router = APIRouter()
 
+FREE_SHIPPING_THRESHOLD = 10.0
+SHIPPING_FEE = 1.2
+
 
 def generate_order_number():
     return "ORD-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
@@ -15,7 +18,7 @@ def generate_order_number():
 
 @router.post("/", response_model=schemas.Order)
 def create_order(order_data: schemas.OrderCreate, db: Session = Depends(get_db)):
-    total = 0.0
+    subtotal = 0.0
     validated_items = []
 
     for item in order_data.items:
@@ -24,9 +27,11 @@ def create_order(order_data: schemas.OrderCreate, db: Session = Depends(get_db))
             raise HTTPException(status_code=404, detail=f"Product {item.product_id} not found")
         if product.stock < item.quantity:
             raise HTTPException(status_code=400, detail=f"Insufficient stock for {product.name}")
-        total += item.price * item.quantity
+        subtotal += item.price * item.quantity
         validated_items.append(item)
         product.stock -= item.quantity
+
+    shipping_fee = 0.0 if subtotal >= FREE_SHIPPING_THRESHOLD else SHIPPING_FEE
 
     db_order = models.Order(
         order_number=generate_order_number(),
@@ -36,7 +41,8 @@ def create_order(order_data: schemas.OrderCreate, db: Session = Depends(get_db))
         address=order_data.address,
         city=order_data.city,
         notes=order_data.notes,
-        total_amount=total,
+        shipping_fee=shipping_fee,
+        total_amount=subtotal + shipping_fee,
         payment_method="cash_on_delivery",
     )
     db.add(db_order)

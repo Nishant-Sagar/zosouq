@@ -137,9 +137,22 @@ export default function OrderConfirmationPage() {
             </div>
           ))}
         </div>
-        <div className="border-t border-slate-100 mt-4 pt-4 flex justify-between">
-          <span className="font-bold text-slate-900">Total</span>
-          <span className="text-xl font-extrabold text-gray-900">{formatPrice(order.total_amount)}</span>
+        <div className="border-t border-slate-100 mt-4 pt-4 space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500">Subtotal</span>
+            <span className="font-medium text-slate-700">{formatPrice(order.total_amount - (order.shipping_fee ?? 0))}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500">Shipping</span>
+            {(order.shipping_fee ?? 0) === 0
+              ? <span className="font-semibold text-emerald-600">FREE</span>
+              : <span className="font-semibold text-slate-700">{formatPrice(order.shipping_fee)}</span>
+            }
+          </div>
+          <div className="flex justify-between pt-2 border-t border-slate-100">
+            <span className="font-bold text-slate-900">Total</span>
+            <span className="text-xl font-extrabold text-gray-900">{formatPrice(order.total_amount)}</span>
+          </div>
         </div>
       </div>
 

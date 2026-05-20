@@ -1,9 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 from database import engine, Base
 from routers import categories, products, orders
 
 Base.metadata.create_all(bind=engine)
+
+# Add shipping_fee column to existing orders tables that predate it
+with engine.connect() as _conn:
+    try:
+        _conn.execute(text("ALTER TABLE orders ADD COLUMN shipping_fee FLOAT DEFAULT 0.0"))
+        _conn.commit()
+    except Exception:
+        pass  # column already exists
 
 app = FastAPI(title="Zosouq E-Commerce API", version="1.0.0")
 

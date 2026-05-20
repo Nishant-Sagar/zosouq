@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag, Shield, Sparkles } from 'lucide-react'
+import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag, Shield, Sparkles, Truck } from 'lucide-react'
 import { useCart, useToast } from '../context/CartContext'
-import { formatPrice } from '../utils/format'
+import { formatPrice, calcShipping, FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from '../utils/format'
 
 export default function CartPage() {
   const { items, dispatch, totalPrice } = useCart()
@@ -53,8 +53,9 @@ export default function CartPage() {
     )
   }
 
-  const shipping = 0
   const subtotal = totalPrice
+  const shipping = calcShipping(subtotal)
+  const amountToFreeShipping = FREE_SHIPPING_THRESHOLD - subtotal
   const totalQty = items.reduce((s, i) => s + i.quantity, 0)
 
   return (
@@ -161,13 +162,26 @@ export default function CartPage() {
                   <span className="text-gray-500 flex items-center gap-1">
                     <Tag className="w-3.5 h-3.5" /> Shipping
                   </span>
-                  <span className="font-semibold text-emerald-600">FREE</span>
+                  {shipping === 0
+                    ? <span className="font-semibold text-emerald-600">FREE</span>
+                    : <span className="font-semibold text-gray-900">{formatPrice(SHIPPING_FEE)}</span>
+                  }
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Payment</span>
                   <span className="font-medium text-gray-700">Cash on Delivery</span>
                 </div>
               </div>
+
+              {/* Free-shipping nudge */}
+              {amountToFreeShipping > 0 && (
+                <div className="mb-4 px-3 py-2.5 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-2">
+                  <Truck className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-800 leading-snug">
+                    Add <span className="font-bold">{formatPrice(amountToFreeShipping)}</span> more to get <span className="font-bold text-emerald-700">FREE shipping</span>!
+                  </p>
+                </div>
+              )}
 
               <div className="border-t border-gray-100 pt-4 mb-5">
                 <div className="flex justify-between items-baseline">
@@ -191,7 +205,7 @@ export default function CartPage() {
               <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-center gap-1.5 text-gray-400">
                 <Shield className="w-3.5 h-3.5" />
                 <p className="text-[10px] sm:text-xs">
-                  Secure checkout · Free delivery · Cash on delivery
+                  Secure checkout · Free delivery over KD 10.000 · Cash on delivery
                 </p>
               </div>
             </div>

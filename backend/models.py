@@ -54,6 +54,7 @@ class Order(Base):
     address = Column(Text)
     city = Column(String)
     notes = Column(Text, nullable=True)
+    shipping_fee = Column(Float, default=0.0)
     total_amount = Column(Float)
     status = Column(String, default="pending")
     payment_method = Column(String, default="cash_on_delivery")
