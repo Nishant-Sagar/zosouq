@@ -18,7 +18,6 @@ Extras/*_images/
 
 # Downloaded product images
 frontend/public/products/
-frontend/public/images/
 
 # Virtual environment
 .venv/
