@@ -7,7 +7,7 @@ import ProductCard from '../components/ProductCard'
 /* ─── Hero Slides (Livish-style with big discount callouts) ─── */
 const HERO_SLIDES = [
   {
-    img: '/images/luxury-perfumes.jpg',
+    img: 'https://images.unsplash.com/photo-1541643600914-78b084683702?w=1200&fit=crop',
     title: 'Luxury Perfumes',
     subtitle: 'Over 1,000 authentic fragrances from top global brands',
     badge: 'Exclusively on Zosouq',
@@ -20,7 +20,7 @@ const HERO_SLIDES = [
     subtitleColor: 'text-amber-200',
   },
   {
-    img: '/images/premium-makeup.jpg',
+    img: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=1200&fit=crop',
     title: 'Premium Makeup',
     subtitle: 'Beauty essentials for every skin tone and occasion',
     badge: 'New Collection',
@@ -33,7 +33,7 @@ const HERO_SLIDES = [
     subtitleColor: 'text-rose-200',
   },
   {
-    img: '/images/body-care-essentials.jpg',
+    img: 'https://images.unsplash.com/photo-1609008803827-6d91a41e3a2e?w=1200&fit=crop',
     title: 'Body Care Essentials',
     subtitle: 'Nourish, restore, and glow with premium treatments',
     badge: 'Best Sellers',
@@ -49,11 +49,11 @@ const HERO_SLIDES = [
 
 /* ─── Circular Category Images (Livish-style) ─── */
 const CATEGORY_CIRCLES = {
-  'perfumes':      { img: '/images/designer-perfumes.jpg', bg: 'bg-violet-50', ring: 'ring-violet-200' },
-  'makeup':        { img: '/images/makeup-tools.jpg', bg: 'bg-pink-50', ring: 'ring-pink-200' },
-  'hair-care':     { img: '/images/styling-essentials.jpg', bg: 'bg-amber-50', ring: 'ring-amber-200' },
-  'body-care':     { img: '/images/body-care-essentials.jpg', bg: 'bg-emerald-50', ring: 'ring-emerald-200' },
-  'personal-care': { img: '/images/personal-care-circle.jpg', bg: 'bg-blue-50', ring: 'ring-blue-200' },
+  'perfumes':      { img: 'https://images.unsplash.com/photo-1595535873420-a599195b3f4a?w=800&fit=crop', bg: 'bg-violet-50', ring: 'ring-violet-200' },
+  'makeup':        { img: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=800&fit=crop', bg: 'bg-pink-50', ring: 'ring-pink-200' },
+  'hair-care':     { img: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&fit=crop', bg: 'bg-amber-50', ring: 'ring-amber-200' },
+  'body-care':     { img: 'https://images.unsplash.com/photo-1609008803827-6d91a41e3a2e?w=1200&fit=crop', bg: 'bg-emerald-50', ring: 'ring-emerald-200' },
+  'personal-care': { img: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=800&fit=crop', bg: 'bg-blue-50', ring: 'ring-blue-200' },
 }
 
 /* ─── "Shop by Price" badges (Livish-style) ─── */
@@ -68,12 +68,12 @@ const PRICE_RANGES = [
 
 /* ─── Quick-link bubbles (Livish-style extra categories) ─── */
 const QUICK_LINKS = [
-  { label: 'Deals',        link: '/category/perfumes',      img: '/images/deals.jpg', badge: '%' },
-  { label: 'Best Sellers',  link: '/category/personal-care', img: '/images/repair-restore.jpg' },
-  { label: 'New Arrivals',  link: '/category/makeup',        img: '/images/lip-collection.jpg' },
-  { label: 'Summer Sale',   link: '/category/body-care',     img: '/images/summer-sale.jpg', badge: '%' },
-  { label: 'Top Perfumes',  link: '/category/perfumes',      img: '/images/top-perfumes.jpg' },
-  { label: 'Hair Care',     link: '/category/hair-care',     img: '/images/hair-care-quick.jpg' },
+  { label: 'Deals',        link: '/category/perfumes',      img: 'https://images.unsplash.com/photo-1607083206968-13611e3d76db?w=800&fit=crop', badge: '%' },
+  { label: 'Best Sellers',  link: '/category/personal-care', img: 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?w=800&fit=crop' },
+  { label: 'New Arrivals',  link: '/category/makeup',        img: 'https://images.unsplash.com/photo-1586495777744-4e6232bf8dea?w=800&fit=crop' },
+  { label: 'Summer Sale',   link: '/category/body-care',     img: 'https://images.unsplash.com/photo-1619451683294-05ca7e988db1?w=800&fit=crop', badge: '%' },
+  { label: 'Top Perfumes',  link: '/category/perfumes',      img: 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=800&fit=crop' },
+  { label: 'Hair Care',     link: '/category/hair-care',     img: 'https://images.unsplash.com/photo-1536510233921-8e8c5a5d7f28?w=800&fit=crop' },
 ]
 
 const PERKS = [
@@ -361,7 +361,7 @@ export default function HomePage() {
             {/* Sale Banner 1 */}
             <Link to="/category/perfumes"
               className="group relative rounded-2xl overflow-hidden flex items-end" style={{ minHeight: '200px' }}>
-              <img src="/images/luxury-perfumes.jpg" alt="Perfume sale"
+              <img src="https://images.unsplash.com/photo-1541643600914-78b084683702?w=1200&fit=crop" alt="Perfume sale"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-gray-950/85 via-gray-950/40 to-transparent" />
               <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
@@ -383,7 +383,7 @@ export default function HomePage() {
             {/* Sale Banner 2 */}
             <Link to="/category/hair-care"
               className="group relative rounded-2xl overflow-hidden flex items-end" style={{ minHeight: '200px' }}>
-              <img src="/images/hair-care-category.jpg" alt="Hair care deals"
+              <img src="https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?w=800&fit=crop" alt="Hair care deals"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-gray-950/85 via-gray-950/40 to-transparent" />
               <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
@@ -424,7 +424,7 @@ export default function HomePage() {
       <section className="py-6 sm:py-8">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden group" style={{ minHeight: 'clamp(280px, 45vw, 340px)' }}>
-            <img src="/images/free-delivery.jpg" alt="Free delivery across Kuwait"
+            <img src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1200&fit=crop" alt="Free delivery across Kuwait"
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-[1.02]" />
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/90 via-emerald-900/70 to-emerald-900/40" />
             <div className="absolute inset-0 flex items-center">
@@ -474,7 +474,7 @@ export default function HomePage() {
       <section className="py-4 sm:py-6">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden group" style={{ minHeight: 'clamp(280px, 40vw, 380px)' }}>
-            <img src="/images/exclusive-collection.jpg"
+            <img src="https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=1200&fit=crop"
               alt="Exclusive perfume collection"
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-[1.03]" />
             <div className="absolute inset-0 bg-gradient-to-r from-gray-950/90 via-gray-950/60 to-gray-950/30" />
@@ -518,7 +518,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 gap-4">
             {/* Big Sale Card */}
             <Link to="/category/makeup" className="group relative rounded-2xl overflow-hidden flex items-center" style={{ minHeight: 'clamp(220px, 35vw, 280px)' }}>
-              <img src="/images/makeup-collection.jpg" alt="Makeup sale"
+              <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800&fit=crop" alt="Makeup sale"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-r from-rose-900/90 via-rose-900/60 to-rose-900/20" />
               <div className="relative z-10 p-5 sm:p-10">
@@ -554,15 +554,15 @@ export default function HomePage() {
               Show All
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
             {loading
-              ? Array(5).fill(0).map((_, i) => (
+              ? Array(6).fill(0).map((_, i) => (
                   <div key={i} className="animate-pulse">
                     <div className="bg-white rounded-2xl aspect-square" />
                     <div className="mt-3 space-y-2"><div className="h-3 bg-gray-200 rounded w-3/4" /><div className="h-4 bg-gray-200 rounded w-1/2" /></div>
                   </div>
                 ))
-              : deals.slice(0, 5).map(p => <ProductCard key={p.id} product={p} />)
+              : deals.slice(0, 6).map(p => <ProductCard key={p.id} product={p} />)
             }
           </div>
         </div>
@@ -594,7 +594,7 @@ export default function HomePage() {
           BRAND STORY / TRUST SECTION
           ════════════════════════════════════════════════ */}
       <section className="relative overflow-hidden bg-gray-950 py-14 sm:py-20">
-        <img src="/images/brand-story.jpg"
+        <img src="https://images.unsplash.com/photo-1541643600914-78b084683702?w=1200&fit=crop"
           alt="" className="absolute inset-0 w-full h-full object-cover opacity-15" />
         <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-gray-950/80 to-gray-950/50" />
         <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6">
@@ -623,9 +623,9 @@ export default function HomePage() {
               </div>
             </div>
             <div className="hidden lg:grid grid-cols-2 gap-4">
-              <img src="/images/makeup-tools.jpg"
+              <img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=800&fit=crop"
                 alt="Perfume collection" className="rounded-2xl object-cover w-full h-60 shadow-2xl ring-1 ring-white/10" />
-              <img src="/images/makeup-collection.jpg"
+              <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800&fit=crop"
                 alt="Makeup collection" className="rounded-2xl object-cover w-full h-60 mt-8 shadow-2xl ring-1 ring-white/10" />
             </div>
           </div>

@@ -8,56 +8,56 @@ const CAT_CONFIG = {
   'perfumes': {
     gradient: 'from-violet-600 via-purple-600 to-fuchsia-600',
     lightGradient: 'from-violet-50 to-purple-50',
-    img: '/images/cat-perfumes.jpg',
+    img: 'https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=800&fit=crop',
     desc: 'Discover luxury Arabian oud, designer fragrances & niche perfumes from world-renowned brands.',
     tags: ['Oud', 'Floral', 'Woody', 'Fresh', 'Oriental', 'Musky'],
     subCategories: [
-      { name: 'Arabian Oud', img: '/images/arabian-oud.jpg' },
-      { name: 'Designer', img: '/images/designer-perfumes.jpg' },
+      { name: 'Arabian Oud', img: 'https://images.unsplash.com/photo-1583083527882-4bee9aba2eea?w=800&fit=crop' },
+      { name: 'Designer', img: 'https://images.unsplash.com/photo-1595535873420-a599195b3f4a?w=800&fit=crop' },
     ],
   },
   'makeup': {
     gradient: 'from-pink-500 via-rose-500 to-red-500',
     lightGradient: 'from-pink-50 to-rose-50',
-    img: '/images/makeup-category.jpg',
+    img: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=800&fit=crop',
     desc: 'Premium foundations, lipsticks, eyeshadows & more to create your perfect look.',
     tags: ['Lipstick', 'Foundation', 'Eyeshadow', 'Mascara', 'Blush', 'Primer'],
     subCategories: [
-      { name: 'Face', img: '/images/makeup-collection.jpg' },
-      { name: 'Lips', img: '/images/lip-collection.jpg' },
+      { name: 'Face', img: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800&fit=crop' },
+      { name: 'Lips', img: 'https://images.unsplash.com/photo-1586495777744-4e6232bf8dea?w=800&fit=crop' },
     ],
   },
   'hair-care': {
     gradient: 'from-amber-500 via-orange-500 to-yellow-500',
     lightGradient: 'from-amber-50 to-orange-50',
-    img: '/images/hair-care-category.jpg',
+    img: 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?w=800&fit=crop',
     desc: 'Professional-grade shampoos, serums, masks & styling products for every hair type.',
     tags: ['Shampoo', 'Conditioner', 'Hair Mask', 'Serum', 'Oil', 'Styling'],
     subCategories: [
-      { name: 'Treatment', img: '/images/repair-restore.jpg' },
-      { name: 'Styling', img: '/images/styling-essentials.jpg' },
+      { name: 'Treatment', img: 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?w=800&fit=crop' },
+      { name: 'Styling', img: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&fit=crop' },
     ],
   },
   'body-care': {
     gradient: 'from-emerald-500 via-teal-500 to-cyan-500',
     lightGradient: 'from-emerald-50 to-teal-50',
-    img: '/images/body-care-category.jpg',
+    img: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=800&fit=crop',
     desc: 'Indulge in spa-quality body lotions, scrubs, creams & luxurious body treatments.',
     tags: ['Lotion', 'Scrub', 'Body Wash', 'Cream', 'Butter', 'Mist'],
     subCategories: [
-      { name: 'Spa', img: '/images/spa-at-home.jpg' },
-      { name: 'Summer', img: '/images/summer-ready.jpg' },
+      { name: 'Spa', img: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&fit=crop' },
+      { name: 'Summer', img: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=800&fit=crop' },
     ],
   },
   'personal-care': {
     gradient: 'from-blue-500 via-indigo-500 to-purple-500',
     lightGradient: 'from-blue-50 to-indigo-50',
-    img: '/images/personal-care-category.jpg',
+    img: 'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=800&fit=crop',
     desc: 'Daily essentials including cleansers, moisturizers, sunscreens & skincare routines.',
     tags: ['Cleanser', 'Moisturizer', 'Serum', 'Sunscreen', 'Deodorant', 'Soap'],
     subCategories: [
-      { name: 'Daily', img: '/images/daily-essentials.jpg' },
-      { name: 'Skincare', img: '/images/skincare-picks.jpg' },
+      { name: 'Daily', img: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=800&fit=crop' },
+      { name: 'Skincare', img: 'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=800&fit=crop' },
     ],
   },
 }
@@ -99,7 +99,7 @@ export default function CategoriesPage() {
       <section className="py-4 sm:py-6">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden group" style={{ minHeight: 'clamp(220px, 35vw, 340px)' }}>
-            <img src="/images/luxury-perfumes.jpg" alt="Shop by Category"
+            <img src="https://images.unsplash.com/photo-1541643600914-78b084683702?w=1200&fit=crop" alt="Shop by Category"
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-[1.02]" />
             <div className="absolute inset-0 bg-gradient-to-r from-gray-950/90 via-gray-950/60 to-gray-950/30" />
             <div className="absolute inset-0 flex items-center">

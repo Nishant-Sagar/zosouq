@@ -14,11 +14,11 @@ const CAT_COLORS = {
 }
 
 const CAT_NAV_IMGS = {
-  'perfumes': '/images/nav-perfumes.jpg',
-  'makeup': '/images/nav-makeup.jpg',
-  'hair-care': '/images/nav-haircare.jpg',
-  'body-care': '/images/nav-bodycare.jpg',
-  'personal-care': '/images/nav-personalcare.jpg',
+  'perfumes': 'https://images.unsplash.com/photo-1541643600914-78b084683702?w=400&fit=crop',
+  'makeup': 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400&fit=crop',
+  'hair-care': 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?w=400&fit=crop',
+  'body-care': 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400&fit=crop',
+  'personal-care': 'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=400&fit=crop',
 }
 
 const CAT_SUBTLE_BG = {
