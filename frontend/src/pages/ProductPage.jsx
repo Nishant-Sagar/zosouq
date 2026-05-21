@@ -6,6 +6,7 @@ import { useCart, useToast } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
 import ProductCard from '../components/ProductCard'
 import { formatPrice } from '../utils/format'
+import SEO from '../components/SEO'
 
 function Stars({ rating, size = 'md' }) {
   const cls = size === 'lg' ? 'w-4 h-4' : 'w-3.5 h-3.5'
@@ -114,8 +115,47 @@ export default function ProductPage() {
 
   const wishlisted = isWishlisted(product.id)
 
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description,
+    image: product.image_url || '',
+    sku: String(product.id),
+    brand: product.brand ? { '@type': 'Brand', name: product.brand } : undefined,
+    offers: {
+      '@type': 'Offer',
+      priceCurrency: 'KWD',
+      price: product.price.toFixed(3),
+      availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      seller: { '@type': 'Organization', name: 'Zosouq' },
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingRate: { '@type': 'MonetaryAmount', value: '0', currency: 'KWD' },
+        deliveryTime: { '@type': 'ShippingDeliveryTime', handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 0, unitCode: 'DAY' }, transitTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 1, unitCode: 'DAY' } },
+      },
+    },
+    ...(product.review_count > 0 && {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: product.rating,
+        reviewCount: product.review_count,
+        bestRating: 5,
+        worstRating: 1,
+      },
+    }),
+  }
+
   return (
     <div className="min-h-screen bg-gray-50/50">
+      <SEO
+        title={product.brand ? `${product.name} — ${product.brand}` : product.name}
+        description={`Buy ${product.name}${product.brand ? ` by ${product.brand}` : ''} in Kuwait. ${product.description?.slice(0, 100)}... Same-day delivery. KD ${product.price.toFixed(3)}.`}
+        image={product.image_url}
+        path={`/product/${product.slug}`}
+        type="product"
+        jsonLd={productJsonLd}
+      />
 
       {/* ═══ BREADCRUMB ═══ */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 pt-4 sm:pt-6">
@@ -146,6 +186,7 @@ export default function ProductPage() {
                   src={allImages[activeImg] || `https://picsum.photos/seed/${product.slug}/600/600`}
                   alt={product.name}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  loading="eager" fetchPriority="high" decoding="async"
                   onError={e => { e.target.src = `https://picsum.photos/seed/${product.id}/600/600` }}
                 />
 
@@ -215,6 +256,7 @@ export default function ProductPage() {
                         src={img}
                         alt={`${product.name} view ${i + 1}`}
                         className="w-full h-full object-cover"
+                        loading="lazy" decoding="async"
                         onError={e => { e.target.src = `https://picsum.photos/seed/${product.id + i}/100/100` }}
                       />
                     </button>
@@ -343,7 +385,7 @@ export default function ProductPage() {
               {/* ── Trust Perks ── */}
               <div className="grid grid-cols-3 gap-3 border-t border-gray-100 pt-5">
                 {[
-                  { icon: Truck, label: 'Free Delivery' },
+                  { icon: Truck, label: 'Same-Day Delivery' },
                   { icon: Package, label: 'Cash on Delivery' },
                   { icon: Shield, label: '100% Authentic' },
                 ].map(({ icon: Icon, label }) => (

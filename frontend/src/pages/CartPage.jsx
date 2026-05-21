@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag, Shield, Sparkles, Truck } from 'lucide-react'
 import { useCart, useToast } from '../context/CartContext'
 import { formatPrice, calcShipping, FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from '../utils/format'
+import SEO from '../components/SEO'
 
 export default function CartPage() {
   const { items, dispatch, totalPrice } = useCart()
@@ -60,6 +61,7 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-gray-50/50">
+      <SEO title="Your Cart" noIndex={true} />
 
       {/* ═══ BREADCRUMB ═══ */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 pt-4 sm:pt-6">
@@ -86,6 +88,7 @@ export default function CartPage() {
                       src={item.image_url || `https://picsum.photos/seed/${item.slug}/200/200`}
                       alt={item.name}
                       className="w-full h-full object-cover"
+                      loading="lazy" decoding="async"
                       onError={e => { e.target.src = `https://picsum.photos/seed/${item.id}/200/200` }}
                     />
                   </div>
@@ -205,7 +208,7 @@ export default function CartPage() {
               <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-center gap-1.5 text-gray-400">
                 <Shield className="w-3.5 h-3.5" />
                 <p className="text-[10px] sm:text-xs">
-                  Secure checkout · Free delivery over KD 10.000 · Cash on delivery
+                  Secure checkout · Same-day delivery · Cash on delivery
                 </p>
               </div>
             </div>

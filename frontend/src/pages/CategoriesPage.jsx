@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Sparkles, Package, Truck, Shield, Clock, ChevronRight } from 'lucide-react'
+import { ArrowRight, Sparkles, Package, Truck, Shield, Zap, ChevronRight } from 'lucide-react'
 import { getCategories } from '../api'
+import SEO from '../components/SEO'
 
 /* ─── Visual config per category ─── */
 const CAT_CONFIG = {
@@ -75,7 +76,7 @@ const DEFAULT_CONFIG = {
 const PERKS = [
   { icon: Truck, title: 'Free Delivery', desc: 'All across Kuwait', color: 'text-emerald-600', bg: 'bg-emerald-50' },
   { icon: Shield, title: '100% Authentic', desc: 'Guaranteed genuine', color: 'text-blue-600', bg: 'bg-blue-50' },
-  { icon: Clock, title: 'Next Day', desc: 'Fast delivery', color: 'text-amber-600', bg: 'bg-amber-50' },
+  { icon: Zap, title: 'Same Day', desc: 'Delivered today', color: 'text-amber-600', bg: 'bg-amber-50' },
   { icon: Package, title: '4,400+ Products', desc: 'Huge selection', color: 'text-purple-600', bg: 'bg-purple-50' },
 ]
 
@@ -92,6 +93,11 @@ export default function CategoriesPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO
+        title="Shop All Beauty Categories"
+        description="Browse perfumes, makeup, hair care, body care & personal care. Same-day delivery across Kuwait. Over 4,400 authentic products from top global brands."
+        path="/categories"
+      />
 
       {/* ════════════════════════════════════════════════
           HERO POSTER
@@ -100,7 +106,8 @@ export default function CategoriesPage() {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden group" style={{ minHeight: 'clamp(220px, 35vw, 340px)' }}>
             <img src="/images/luxury-perfumes.webp" alt="Shop by Category"
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-[1.02]" />
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-[1.02]"
+              loading="eager" fetchPriority="high" decoding="async" />
             <div className="absolute inset-0 bg-gradient-to-r from-gray-950/90 via-gray-950/60 to-gray-950/30" />
             <div className="absolute inset-0 flex items-center">
               <div className="px-6 sm:px-12 max-w-lg">
@@ -147,7 +154,8 @@ export default function CategoriesPage() {
                         <Link to={`/category/${cat.slug}`} className="block">
                           <div className="relative aspect-[16/10] sm:aspect-[16/9] lg:aspect-auto lg:h-full lg:min-h-[380px]">
                             <img src={cfg.img} alt={cat.name}
-                              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-105" />
+                              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-105"
+                              loading="lazy" decoding="async" />
                             <div className={`absolute inset-0 bg-gradient-to-t ${cfg.gradient} opacity-40 group-hover:opacity-30 transition-opacity duration-500`} />
 
                             {/* Floating product count badge */}
@@ -167,7 +175,7 @@ export default function CategoriesPage() {
                                   <div key={sub.name}
                                     className="flex items-center gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-white/90 backdrop-blur-sm shadow-lg">
                                     <img src={sub.img} alt={sub.name}
-                                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover" />
+                                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover" loading="lazy" decoding="async" />
                                     <span className="text-xs sm:text-sm font-semibold text-gray-800">{sub.name}</span>
                                   </div>
                                 ))}
@@ -244,7 +252,7 @@ export default function CategoriesPage() {
                 <Link key={cat.id} to={`/category/${cat.slug}`}
                   className="group relative rounded-2xl overflow-hidden aspect-[4/5] flex flex-col justify-end shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                   <img src={cfg.img} alt={cat.name}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" decoding="async" />
                   <div className={`absolute inset-0 bg-gradient-to-t ${cfg.gradient} opacity-60 group-hover:opacity-50 transition-opacity`} />
                   <div className="relative z-10 p-4 sm:p-5">
                     <h3 className="text-white font-bold text-base sm:text-lg drop-shadow-md">{cat.name}</h3>

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, DateTime, Text
+from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, DateTime, Text, Index
 from sqlalchemy.orm import relationship
 from database import Base
 from datetime import datetime
@@ -48,30 +48,46 @@ class Order(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     order_number = Column(String, unique=True, index=True)
-    customer_name = Column(String)
-    customer_email = Column(String)
+    customer_name = Column(String, index=True)
+    customer_email = Column(String, index=True)
     customer_phone = Column(String)
     address = Column(Text)
-    city = Column(String)
+    city = Column(String, index=True)
     notes = Column(Text, nullable=True)
     shipping_fee = Column(Float, default=0.0)
     total_amount = Column(Float)
-    status = Column(String, default="pending")
+    status = Column(String, default="pending", index=True)
     payment_method = Column(String, default="cash_on_delivery")
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     items = relationship("OrderItem", back_populates="order")
+
+    __table_args__ = (
+        Index('ix_orders_status_created', 'status', 'created_at'),
+        Index('ix_orders_email_created', 'customer_email', 'created_at'),
+    )
 
 
 class OrderItem(Base):
     __tablename__ = "order_items"
 
     id = Column(Integer, primary_key=True, index=True)
-    order_id = Column(Integer, ForeignKey("orders.id"))
-    product_id = Column(Integer, ForeignKey("products.id"))
+    order_id = Column(Integer, ForeignKey("orders.id"), index=True)
+    product_id = Column(Integer, ForeignKey("products.id"), index=True)
     quantity = Column(Integer)
     price = Column(Float)
 
     order = relationship("Order", back_populates="items")
     product = relationship("Product", back_populates="order_items")
+
+
+class AdminUser(Base):
+    __tablename__ = "admin_users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
+    hashed_password = Column(String)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_login = Column(DateTime, nullable=True)

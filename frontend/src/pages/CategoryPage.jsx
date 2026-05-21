@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { SlidersHorizontal, ChevronDown, X, Sparkles, ArrowRight, Star } from 'lucide-react'
-import { getCategory, getProducts } from '../api'
+import { getCategory, getProducts, getProductCount } from '../api'
 import ProductCard from '../components/ProductCard'
+import Pagination from '../components/Pagination'
+import SEO from '../components/SEO'
 
 /* ── Category visual themes ── */
 const CATEGORY_THEMES = {
@@ -122,7 +124,7 @@ function PromoBanner({ promo }) {
     <div className="relative col-span-2 rounded-2xl overflow-hidden group cursor-pointer"
       style={{ minHeight: '220px' }}>
       <img src={promo.img} alt={promo.title}
-        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" decoding="async" />
       <div className={`absolute inset-0 bg-gradient-to-br ${promo.gradient} opacity-75`} />
       <div className="relative z-10 flex flex-col justify-end h-full p-5 sm:p-7">
         <span className="inline-flex items-center gap-1.5 text-white/80 text-xs font-semibold uppercase tracking-wider mb-2">
@@ -140,37 +142,70 @@ function PromoBanner({ promo }) {
   )
 }
 
+const PER_PAGE = 40
+
 export default function CategoryPage() {
   const { slug } = useParams()
   const [category, setCategory] = useState(null)
   const [products, setProducts] = useState([])
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [sort, setSort] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
   const [filterOpen, setFilterOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
+  const [page, setPage] = useState(1)
 
   const theme = CATEGORY_THEMES[slug] || DEFAULT_THEME
 
   useEffect(() => {
-    setLoading(true)
-    window.scrollTo(0, 0)
-    Promise.all([getCategory(slug), getProducts({ category_slug: slug })]).then(([cat, prods]) => {
-      setCategory(cat)
-      setProducts(prods)
-    }).catch(() => {}).finally(() => setLoading(false))
+    setPage(1)
+    setSort('')
+    setMaxPrice('')
   }, [slug])
 
-  const displayProducts = useCallback(() => {
-    let result = [...products]
-    if (maxPrice) result = result.filter(p => p.price <= parseFloat(maxPrice))
-    if (sort === 'price_asc') result.sort((a, b) => a.price - b.price)
-    else if (sort === 'price_desc') result.sort((a, b) => b.price - a.price)
-    else if (sort === 'rating') result.sort((a, b) => b.rating - a.rating)
-    return result
-  }, [products, sort, maxPrice])
+  useEffect(() => {
+    setLoading(true)
+    window.scrollTo(0, 0)
+    const params = { category_slug: slug, limit: PER_PAGE, skip: (page - 1) * PER_PAGE }
+    if (maxPrice) params.max_price = parseFloat(maxPrice)
+    if (sort === 'price_asc') params.sort = 'price_asc'
+    else if (sort === 'price_desc') params.sort = 'price_desc'
 
-  const filtered = displayProducts()
+    const countParams = { category_slug: slug }
+    if (maxPrice) countParams.max_price = parseFloat(maxPrice)
+
+    Promise.all([
+      page === 1 ? getCategory(slug) : Promise.resolve(category),
+      getProducts(params),
+      getProductCount(countParams),
+    ]).then(([cat, prods, count]) => {
+      if (cat) setCategory(cat)
+      let sorted = [...prods]
+      if (sort === 'rating') sorted.sort((a, b) => b.rating - a.rating)
+      setProducts(sorted)
+      setTotal(count)
+    }).catch(() => {}).finally(() => setLoading(false))
+  }, [slug, page, sort, maxPrice])
+
+  const handleFilterApply = (newMaxPrice) => {
+    setMaxPrice(newMaxPrice)
+    setPage(1)
+  }
+
+  const handleSort = (value) => {
+    setSort(value)
+    setPage(1)
+    setSortOpen(false)
+  }
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const totalPages = Math.ceil(total / PER_PAGE)
+  const filtered = products
 
   /* Insert promo banners at specific positions in the product grid */
   const renderProductGrid = () => {
@@ -190,8 +225,29 @@ export default function CategoryPage() {
     return items
   }
 
+  const catName = category?.name || slug?.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || ''
+  const catDesc = category?.description || `Shop authentic ${catName} products in Kuwait. Same-day delivery. Free on orders over KD 10.`
+  const catImage = theme.poster || '/images/luxury-perfumes.webp'
+  const displayCount = total > 0 ? total : filtered.length
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://zosouq.com/' },
+      { '@type': 'ListItem', position: 2, name: 'Categories', item: 'https://zosouq.com/categories' },
+      { '@type': 'ListItem', position: 3, name: catName, item: `https://zosouq.com/category/${slug}` },
+    ],
+  }
+
   return (
     <div className="min-h-screen bg-gray-50/50">
+      <SEO
+        title={`Buy ${catName} Online in Kuwait`}
+        description={`${catDesc} Browse ${displayCount > 0 ? displayCount + '+' : 'hundreds of'} authentic products with same-day delivery across Kuwait.`}
+        image={catImage}
+        path={`/category/${slug}`}
+        jsonLd={breadcrumbJsonLd}
+      />
 
       {/* ═══ HERO POSTER (matches HomePage poster style) ═══ */}
       <section className="pt-4 sm:pt-6 pb-2">
@@ -207,7 +263,8 @@ export default function CategoryPage() {
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden group"
             style={{ minHeight: 'clamp(260px, 40vw, 360px)' }}>
             <img src={theme.poster} alt={category?.name || ''}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-[1.02]" />
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-[1.02]"
+              loading="eager" fetchPriority="high" decoding="async" />
             <div className={`absolute inset-0 bg-gradient-to-r ${theme.overlayGradient}`} />
 
             {/* Content */}
@@ -224,13 +281,13 @@ export default function CategoryPage() {
                 </p>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   <span className="bg-white/10 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10">
-                    {filtered.length} Products
+                    {displayCount} Products
                   </span>
                   <span className="bg-white/10 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10">
                     100% Authentic
                   </span>
                   <span className="bg-white/10 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10">
-                    Free Delivery
+                    Same-Day Delivery
                   </span>
                 </div>
               </div>
@@ -267,7 +324,7 @@ export default function CategoryPage() {
         <div className="flex items-center justify-between gap-3 mb-6">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm text-gray-500 mr-1">
-              {loading ? '' : `${filtered.length} products`}
+              {loading ? '' : `${displayCount} products`}
             </span>
 
             <button
@@ -291,7 +348,7 @@ export default function CategoryPage() {
 
             {maxPrice && (
               <button
-                onClick={() => setMaxPrice('')}
+                onClick={() => handleFilterApply('')}
                 className="flex items-center gap-1 px-3 py-2 rounded-full bg-gray-100 text-gray-600 text-xs font-medium hover:bg-gray-200 transition-colors"
               >
                 Max KD {maxPrice} <X className="w-3 h-3" />
@@ -315,7 +372,7 @@ export default function CategoryPage() {
                   {SORT_OPTIONS.map(opt => (
                     <button
                       key={opt.value}
-                      onClick={() => { setSort(opt.value); setSortOpen(false) }}
+                      onClick={() => handleSort(opt.value)}
                       className={`w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all duration-150 flex items-center gap-2 ${
                         sort === opt.value
                           ? 'font-semibold'
@@ -351,12 +408,13 @@ export default function CategoryPage() {
                   <input
                     type="number"
                     placeholder="e.g. 50"
-                    value={maxPrice}
-                    onChange={e => setMaxPrice(e.target.value)}
+                    defaultValue={maxPrice}
+                    onBlur={e => handleFilterApply(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleFilterApply(e.target.value)}
                     className="w-32 border rounded-xl px-4 py-2.5 text-sm focus:outline-none transition-all"
                     style={{ borderColor: theme.accentColor + '40' }}
                   />
-                  <button onClick={() => setMaxPrice('')}
+                  <button onClick={() => handleFilterApply('')}
                     className="text-xs text-gray-400 hover:text-red-500 transition-colors">
                     Clear
                   </button>
@@ -378,9 +436,17 @@ export default function CategoryPage() {
             <Link to="/" className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all active:scale-95">Back to Home</Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
-            {renderProductGrid()}
-          </div>
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
+              {renderProductGrid()}
+            </div>
+            <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
+            {totalPages > 1 && (
+              <p className="text-center text-xs text-gray-400 mt-3">
+                Page {page} of {totalPages} · {displayCount} products
+              </p>
+            )}
+          </>
         )}
 
         {/* ═══ BOTTOM CTA BANNER ═══ */}
@@ -394,7 +460,7 @@ export default function CategoryPage() {
             <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between p-8 sm:p-10 gap-6">
               <div>
                 <span className="inline-flex items-center gap-1.5 text-white/70 text-xs font-semibold uppercase tracking-wider mb-2">
-                  <Star className="w-3.5 h-3.5 fill-white/50" /> Free Delivery across Kuwait
+                  <Star className="w-3.5 h-3.5 fill-white/50" /> Same-Day Delivery across Kuwait
                 </span>
                 <h3 className="text-xl sm:text-2xl font-bold text-white" style={{ fontFamily: 'Georgia, serif' }}>
                   Can't find what you need?

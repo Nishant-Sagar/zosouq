@@ -4,6 +4,7 @@ import { CheckCircle, Package, Truck, Clock, Copy, ArrowRight } from 'lucide-rea
 import { getOrder } from '../api'
 import { useToast } from '../context/CartContext'
 import { formatPrice } from '../utils/format'
+import SEO from '../components/SEO'
 
 const STATUS_STEPS = [
   { key: 'pending', label: 'Order Placed', icon: Package },
@@ -50,6 +51,7 @@ export default function OrderConfirmationPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+      <SEO title={`Order Confirmed — ${order.order_number}`} noIndex={true} />
       {/* Success Header */}
       <div className="text-center mb-10">
         <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5">
@@ -108,7 +110,7 @@ export default function OrderConfirmationPage() {
         <div className="mt-6 flex items-center gap-2 text-sm">
           <Clock className="w-4 h-4 text-amber-500" />
           <span className="text-slate-600">
-            Estimated delivery: <strong>2–5 business days</strong>
+            Estimated delivery: <strong>Today</strong>
           </span>
         </div>
       </div>
@@ -125,6 +127,7 @@ export default function OrderConfirmationPage() {
                     src={item.product.image_url}
                     alt={item.product.name}
                     className="w-full h-full object-cover"
+                    loading="lazy" decoding="async"
                     onError={e => { e.target.src = `https://picsum.photos/seed/${item.product_id}/100/100` }}
                   />
                 </div>

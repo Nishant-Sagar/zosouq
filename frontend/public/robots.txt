@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+Disallow: /cart
+Disallow: /checkout
+Disallow: /order-confirmation/
+Disallow: /my-orders
+Disallow: /wishlist
+
+Sitemap: https://zosouq.com/sitemap.xml

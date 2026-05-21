@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Package, Search, Mail, Clock, ChevronRight, ShoppingBag, Sparkles, AlertCircle, Truck, CheckCircle, Hash } from 'lucide-react'
 import { searchOrders, getOrder } from '../api'
 import { formatPrice } from '../utils/format'
+import SEO from '../components/SEO'
 
 const STATUS_MAP = {
   pending: { label: 'Pending', color: 'bg-amber-100 text-amber-700', icon: Clock },
@@ -68,6 +69,7 @@ export default function MyOrdersPage() {
 
   return (
     <div className="min-h-screen bg-gray-50/50">
+      <SEO title="My Orders" noIndex={true} />
       {/* Breadcrumb */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 pt-4 sm:pt-6">
         <nav className="flex items-center gap-2 text-sm text-gray-400 mb-3 sm:mb-4">
@@ -225,6 +227,7 @@ export default function MyOrdersPage() {
                             <div key={i} className="w-12 h-12 rounded-lg overflow-hidden bg-gray-50 border border-gray-100 flex-shrink-0">
                               {item.product ? (
                                 <img src={item.product.image_url} alt="" className="w-full h-full object-cover"
+                                  loading="lazy" decoding="async"
                                   onError={e => { e.target.src = `https://picsum.photos/seed/${item.product_id}/100/100` }} />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-gray-300">

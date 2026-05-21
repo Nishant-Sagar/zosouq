@@ -56,7 +56,7 @@ export default function Navbar() {
     <>
       {/* ── Announcement Bar ── */}
       <div className="bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 text-white text-center text-xs py-2 px-4">
-        <span>Free Shipping on Orders over <b>KD 10</b> — Arrives Next Day</span>
+        <span>⚡ Same-Day Delivery across Kuwait — Free on Orders over <b>KD 10</b></span>
       </div>
 
       {/* ── Main Header ── */}
@@ -171,7 +171,7 @@ export default function Navbar() {
                       : subtleBg + ' text-gray-700'
                   }`}>
                   <div className="w-7 h-7 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-black/5">
-                    <img src={navImg} alt="" className={`w-full h-full object-cover ${cat.slug === 'hair-care' ? 'object-top' : ''}`} />
+                    <img src={navImg} alt="" className={`w-full h-full object-cover ${cat.slug === 'hair-care' ? 'object-top' : ''}`} loading="lazy" decoding="async" />
                   </div>
                   <span className="text-sm font-medium pr-1">{cat.name}</span>
                 </Link>
@@ -185,7 +185,7 @@ export default function Navbar() {
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-[60]" onClick={() => setMobileOpen(false)}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-          <div className="absolute top-0 left-0 bottom-0 w-80 bg-white shadow-2xl overflow-y-auto animate-slide-in-left"
+          <div className="absolute top-0 left-0 bottom-0 w-[85vw] max-w-xs bg-white shadow-2xl overflow-y-auto animate-slide-in-left"
             onClick={e => e.stopPropagation()}>
             {/* Menu header */}
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
@@ -245,7 +245,7 @@ export default function Navbar() {
                           : subtleBg + ' text-gray-700 hover:shadow-md'
                       }`}>
                       <div className={`w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 shadow-sm ${active ? 'ring-2 ring-white/30' : 'ring-1 ring-black/5'}`}>
-                        <img src={navImg} alt="" className={`w-full h-full object-cover ${cat.slug === 'hair-care' ? 'object-top' : ''}`} />
+                        <img src={navImg} alt="" className={`w-full h-full object-cover ${cat.slug === 'hair-care' ? 'object-top' : ''}`} loading="lazy" decoding="async" />
                       </div>
                       <span>{cat.name}</span>
                     </Link>

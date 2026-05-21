@@ -4,6 +4,7 @@ import { Truck, AlertCircle, ShoppingBag, CreditCard, User, Mail, Phone, FileTex
 import { useCart, useToast } from '../context/CartContext'
 import { createOrder } from '../api'
 import { formatPrice, calcShipping, FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from '../utils/format'
+import SEO from '../components/SEO'
 
 /* ── Kuwait address data ── */
 const GOVERNORATES = ['Capital', 'Hawalli', 'Farwaniya', 'Mubarak Al-Kabeer', 'Ahmadi', 'Jahra']
@@ -287,6 +288,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-gray-50/50 pb-6">
+      <SEO title="Checkout" noIndex={true} />
 
       {/* ═══ BREADCRUMB ═══ */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 pt-4 sm:pt-6">
@@ -433,7 +435,7 @@ export default function CheckoutPage() {
                   </div>
 
                   {/* Row 2: Block + Street + Avenue */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
                         Block <span className="text-red-400">*</span>
@@ -674,7 +676,7 @@ export default function CheckoutPage() {
                     </button>
                     <div className="flex items-center justify-center gap-1.5 text-gray-400 mt-3">
                       <Shield className="w-3.5 h-3.5" />
-                      <p className="text-[10px] sm:text-xs">Secure checkout · Free delivery · Cash on delivery</p>
+                      <p className="text-[10px] sm:text-xs">Secure checkout · Same-day delivery · Cash on delivery</p>
                     </div>
                   </div>
                 </div>

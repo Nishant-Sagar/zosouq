@@ -6,4 +6,16 @@ export default defineConfig({
   server: {
     port: 5173,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor': ['react', 'react-dom'],
+          'router': ['react-router-dom'],
+          'ui': ['lucide-react'],
+          'http': ['axios', 'react-helmet-async'],
+        },
+      },
+    },
+  },
 })

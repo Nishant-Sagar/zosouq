@@ -1,10 +1,11 @@
+import { memo } from 'react'
 import { Link } from 'react-router-dom'
 import { ShoppingCart, Heart } from 'lucide-react'
 import { useCart, useToast } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
 import { formatPrice } from '../utils/format'
 
-export default function ProductCard({ product, compact, accentColor }) {
+function ProductCard({ product, compact, accentColor }) {
   const { dispatch } = useCart()
   const { dispatch: wishlistDispatch, isWishlisted } = useWishlist()
   const addToast = useToast()
@@ -107,3 +108,5 @@ export default function ProductCard({ product, compact, accentColor }) {
     </Link>
   )
 }
+
+export default memo(ProductCard)

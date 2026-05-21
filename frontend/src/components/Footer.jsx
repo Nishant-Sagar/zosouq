@@ -3,7 +3,7 @@ import { MapPin, Phone, Mail, Heart } from 'lucide-react'
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-300 sm:block hidden">
+    <footer className="bg-gray-900 text-gray-300 pb-16 sm:pb-0">
       {/* Gradient accent stripe */}
       <div className="h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500" />
 
@@ -87,7 +87,7 @@ export default function Footer() {
               Cash on Delivery
             </span>
             <span className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800 text-gray-400 border border-gray-700 flex items-center gap-1">
-              Free Shipping
+              Same-Day Delivery
             </span>
           </div>
         </div>

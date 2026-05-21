@@ -4,6 +4,7 @@ import { Heart, ShoppingCart, Trash2, ArrowRight, Sparkles, Star, Share2, Shoppi
 import { useWishlist } from '../context/WishlistContext'
 import { useCart, useToast } from '../context/CartContext'
 import { formatPrice } from '../utils/format'
+import SEO from '../components/SEO'
 
 export default function WishlistPage() {
   const { items, dispatch: wishlistDispatch } = useWishlist()
@@ -86,6 +87,7 @@ export default function WishlistPage() {
   /* ═══ MAIN WISHLIST ═══ */
   return (
     <div className="min-h-screen bg-gray-50/50">
+      <SEO title="My Wishlist" noIndex={true} />
 
       {/* ═══ POSTER HEADER ═══ */}
       <section className="pt-4 sm:pt-6 pb-2">
@@ -184,6 +186,7 @@ export default function WishlistPage() {
                       src={product.image_url || `https://picsum.photos/seed/${product.slug}/400/400`}
                       alt={product.name}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      loading="lazy" decoding="async"
                       onError={e => { e.target.src = `https://picsum.photos/seed/${product.id}/400/400` }}
                     />
                     {/* Overlay on hover */}

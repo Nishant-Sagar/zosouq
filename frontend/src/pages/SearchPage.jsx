@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { Search, Tag } from 'lucide-react'
-import { getProducts } from '../api'
+import { getProducts, getProductCount } from '../api'
 import ProductCard from '../components/ProductCard'
+import Pagination from '../components/Pagination'
+import SEO from '../components/SEO'
+
+const PER_PAGE = 40
 
 function Skeleton() {
   return (
@@ -23,27 +27,49 @@ export default function SearchPage() {
   const maxPrice = searchParams.get('max_price') || ''
   const minPrice = searchParams.get('min_price') || ''
   const [products, setProducts] = useState([])
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(1)
 
   const isPriceFilter = !!(maxPrice || minPrice)
   const hasQuery = !!(query || isPriceFilter)
 
   useEffect(() => {
-    if (!hasQuery) return
-    setLoading(true)
-    const params = {}
-    if (query) params.search = query
-    if (maxPrice) params.max_price = parseFloat(maxPrice)
-    if (minPrice) params.min_price = parseFloat(minPrice)
-    getProducts(params).then(setProducts).catch(() => {}).finally(() => setLoading(false))
+    setPage(1)
   }, [query, maxPrice, minPrice])
 
+  useEffect(() => {
+    if (!hasQuery) return
+    setLoading(true)
+    const params = { limit: PER_PAGE, skip: (page - 1) * PER_PAGE }
+    const countParams = {}
+    if (query) { params.search = query; countParams.search = query }
+    if (maxPrice) { params.max_price = parseFloat(maxPrice); countParams.max_price = parseFloat(maxPrice) }
+    if (minPrice) { params.min_price = parseFloat(minPrice); countParams.min_price = parseFloat(minPrice) }
+    Promise.all([getProducts(params), getProductCount(countParams)])
+      .then(([prods, count]) => { setProducts(prods); setTotal(count) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [query, maxPrice, minPrice, page])
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const totalPages = Math.ceil(total / PER_PAGE)
   const pageTitle = isPriceFilter
     ? `Products Under ${maxPrice} KWD`
     : query ? `Results for "${query}"` : 'Search Products'
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <SEO
+        title={query ? `Results for "${query}"` : 'Search Products'}
+        description={query ? `Search results for "${query}" on Zosouq. Find authentic beauty products in Kuwait with same-day delivery.` : 'Search thousands of authentic beauty, perfume & skincare products on Zosouq Kuwait.'}
+        path={`/search${query ? `?q=${encodeURIComponent(query)}` : ''}`}
+        noIndex={!query}
+      />
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           {isPriceFilter ? <Tag className="w-6 h-6 text-amber-500" /> : <Search className="w-6 h-6 text-slate-400" />}
@@ -51,7 +77,7 @@ export default function SearchPage() {
         </div>
         {!loading && hasQuery && (
           <p className="text-slate-500 text-sm ml-9">
-            {products.length} product{products.length !== 1 ? 's' : ''} found
+            {total} product{total !== 1 ? 's' : ''} found
           </p>
         )}
       </div>
@@ -80,9 +106,17 @@ export default function SearchPage() {
       )}
 
       {!loading && products.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
-          {products.map(p => <ProductCard key={p.id} product={p} />)}
-        </div>
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
+            {products.map(p => <ProductCard key={p.id} product={p} />)}
+          </div>
+          <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
+          {totalPages > 1 && (
+            <p className="text-center text-xs text-gray-400 mt-3">
+              Page {page} of {totalPages} · {total} products
+            </p>
+          )}
+        </>
       )}
     </div>
   )

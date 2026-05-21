@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, ArrowRight, Truck, Shield, RotateCcw, Headphones, Zap, Clock, MapPin, Package, Percent, Sparkles, Award, Tag } from 'lucide-react'
 import { getCategories, getProducts } from '../api'
 import ProductCard from '../components/ProductCard'
+import SEO from '../components/SEO'
 
 /* ─── Hero Slides (Livish-style with big discount callouts) ─── */
 const HERO_SLIDES = [
@@ -77,7 +78,7 @@ const QUICK_LINKS = [
 ]
 
 const PERKS = [
-  { icon: Truck,      title: 'Free Delivery',  sub: 'All across Kuwait',    color: 'text-white', iconBg: 'bg-emerald-500', cardBg: 'bg-gradient-to-br from-emerald-50 to-teal-100', border: 'border-emerald-200', accent: 'text-emerald-700' },
+  { icon: Zap,        title: 'Same-Day Delivery', sub: 'Free over KD 10',    color: 'text-white', iconBg: 'bg-emerald-500', cardBg: 'bg-gradient-to-br from-emerald-50 to-teal-100', border: 'border-emerald-200', accent: 'text-emerald-700' },
   { icon: Shield,     title: '100% Authentic',  sub: 'Verified products',    color: 'text-white', iconBg: 'bg-blue-500',    cardBg: 'bg-gradient-to-br from-blue-50 to-indigo-100',   border: 'border-blue-200',    accent: 'text-blue-700' },
   { icon: RotateCcw,  title: 'Easy Returns',    sub: '14-day hassle-free',   color: 'text-white', iconBg: 'bg-amber-500',   cardBg: 'bg-gradient-to-br from-amber-50 to-orange-100',  border: 'border-amber-200',   accent: 'text-amber-700' },
   { icon: Headphones, title: '24/7 Support',    sub: 'We are here to help',  color: 'text-white', iconBg: 'bg-purple-500',  cardBg: 'bg-gradient-to-br from-purple-50 to-violet-100', border: 'border-purple-200',  accent: 'text-purple-700' },
@@ -180,8 +181,36 @@ export default function HomePage() {
     return () => clearInterval(t)
   }, [])
 
+  const homeJsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: 'Zosouq',
+      url: 'https://zosouq.com',
+      logo: 'https://zosouq.com/images/luxury-perfumes.webp',
+      description: "Kuwait's premier same-day beauty and perfume delivery platform.",
+      address: { '@type': 'PostalAddress', addressCountry: 'KW' },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'Zosouq',
+      url: 'https://zosouq.com',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: { '@type': 'EntryPoint', urlTemplate: 'https://zosouq.com/search?q={search_term_string}' },
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  ]
+
   return (
     <div className="bg-white">
+      <SEO
+        description="Shop 4,400+ authentic perfumes, makeup, skincare & hair care. Same-day delivery across all Kuwait. Free on orders over KD 10. Cash on delivery."
+        path="/"
+        jsonLd={homeJsonLd}
+      />
 
       {/* ════════════════════════════════════════════════
           HERO CAROUSEL  (Livish-style with discount badge)
@@ -362,7 +391,7 @@ export default function HomePage() {
             <Link to="/category/perfumes"
               className="group relative rounded-2xl overflow-hidden flex items-end" style={{ minHeight: '200px' }}>
               <img src="/images/luxury-perfumes.webp" alt="Perfume sale"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" decoding="async" />
               <div className="absolute inset-0 bg-gradient-to-t from-gray-950/85 via-gray-950/40 to-transparent" />
               <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
                 <div className="bg-red-600 text-white px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold flex items-center gap-1 sm:gap-1.5 shadow-lg">
@@ -384,7 +413,7 @@ export default function HomePage() {
             <Link to="/category/hair-care"
               className="group relative rounded-2xl overflow-hidden flex items-end" style={{ minHeight: '200px' }}>
               <img src="/images/hair-care-category.webp" alt="Hair care deals"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" decoding="async" />
               <div className="absolute inset-0 bg-gradient-to-t from-gray-950/85 via-gray-950/40 to-transparent" />
               <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
                 <div className="bg-amber-600 text-white px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold flex items-center gap-1 sm:gap-1.5 shadow-lg">
@@ -425,7 +454,7 @@ export default function HomePage() {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden group" style={{ minHeight: 'clamp(280px, 45vw, 340px)' }}>
             <img src="/images/free-delivery.webp" alt="Free delivery across Kuwait"
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-[1.02]" />
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-[1.02]" loading="lazy" decoding="async" />
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/90 via-emerald-900/70 to-emerald-900/40" />
             <div className="absolute inset-0 flex items-center">
               <div className="px-5 sm:px-12 max-w-lg">
@@ -441,12 +470,12 @@ export default function HomePage() {
                   </div>
                 </div>
                 <h2 className="text-xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 leading-tight">
-                  Free Delivery<br/>Anywhere in Kuwait
+                  Same-Day Delivery<br/>Anywhere in Kuwait
                 </h2>
-                <p className="text-white/60 text-xs sm:text-sm mb-4 sm:mb-5">Every order ships free, no minimums. Next-day delivery. Cash on delivery available.</p>
+                <p className="text-white/60 text-xs sm:text-sm mb-4 sm:mb-5">Order today, receive today. Free delivery on orders over KD 10. Cash on delivery available.</p>
                 <div className="flex flex-wrap gap-2">
                   <span className="bg-white/10 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10">All Kuwait Areas</span>
-                  <span className="bg-white/10 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10">Next-Day Delivery</span>
+                  <span className="bg-white/10 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10">Same-Day Delivery</span>
                   <span className="bg-white/10 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10">Cash on Delivery</span>
                 </div>
               </div>
@@ -476,7 +505,7 @@ export default function HomePage() {
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden group" style={{ minHeight: 'clamp(280px, 40vw, 380px)' }}>
             <img src="/images/exclusive-collection.webp"
               alt="Exclusive perfume collection"
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-[1.03]" />
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-[1.03]" loading="lazy" decoding="async" />
             <div className="absolute inset-0 bg-gradient-to-r from-gray-950/90 via-gray-950/60 to-gray-950/30" />
             <div className="absolute inset-0 flex items-center">
               <div className="px-5 sm:px-12 max-w-lg">
@@ -519,7 +548,7 @@ export default function HomePage() {
             {/* Big Sale Card */}
             <Link to="/category/makeup" className="group relative rounded-2xl overflow-hidden flex items-center" style={{ minHeight: 'clamp(220px, 35vw, 280px)' }}>
               <img src="/images/makeup-collection.webp" alt="Makeup sale"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" decoding="async" />
               <div className="absolute inset-0 bg-gradient-to-r from-rose-900/90 via-rose-900/60 to-rose-900/20" />
               <div className="relative z-10 p-5 sm:p-10">
                 <div className="bg-red-600 text-white px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold inline-flex items-center gap-1 sm:gap-1.5 mb-2 sm:mb-3 shadow-md">
@@ -595,7 +624,7 @@ export default function HomePage() {
           ════════════════════════════════════════════════ */}
       <section className="relative overflow-hidden bg-gray-950 py-14 sm:py-20">
         <img src="/images/brand-story.webp"
-          alt="" className="absolute inset-0 w-full h-full object-cover opacity-15" />
+          alt="" className="absolute inset-0 w-full h-full object-cover opacity-15" loading="lazy" decoding="async" />
         <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-gray-950/80 to-gray-950/50" />
         <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -607,13 +636,13 @@ export default function HomePage() {
                 Kuwait's Most Trusted<br/>Beauty Destination
               </h2>
               <p className="text-gray-400 leading-relaxed mb-8 text-sm max-w-lg">
-                We source every product directly from authorized distributors. 100% authentic, beautifully packaged, delivered to your doorstep within 24 hours.
+                We source every product directly from authorized distributors. 100% authentic, beautifully packaged, delivered to your doorstep the same day you order.
               </p>
               <div className="grid grid-cols-3 gap-6 sm:gap-10">
                 {[
                   { n: '4,400+', l: 'Products' },
                   { n: '15K+', l: 'Happy Customers' },
-                  { n: '24hrs', l: 'Delivery' },
+                  { n: 'Same Day', l: 'Delivery' },
                 ].map(s => (
                   <div key={s.l}>
                     <p className="text-2xl sm:text-3xl font-bold text-rose-400">{s.n}</p>
@@ -624,9 +653,9 @@ export default function HomePage() {
             </div>
             <div className="hidden lg:grid grid-cols-2 gap-4">
               <img src="/images/makeup-tools.webp"
-                alt="Perfume collection" className="rounded-2xl object-cover w-full h-60 shadow-2xl ring-1 ring-white/10" />
+                alt="Perfume collection" className="rounded-2xl object-cover w-full h-60 shadow-2xl ring-1 ring-white/10" loading="lazy" decoding="async" />
               <img src="/images/makeup-collection.webp"
-                alt="Makeup collection" className="rounded-2xl object-cover w-full h-60 mt-8 shadow-2xl ring-1 ring-white/10" />
+                alt="Makeup collection" className="rounded-2xl object-cover w-full h-60 mt-8 shadow-2xl ring-1 ring-white/10" loading="lazy" decoding="async" />
             </div>
           </div>
         </div>

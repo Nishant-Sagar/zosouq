@@ -3,6 +3,72 @@ from typing import Optional, List
 from datetime import datetime
 
 
+# ── Admin schemas ──────────────────────────────────────────
+
+class AdminLogin(BaseModel):
+    username: str
+    password: str
+
+class AdminToken(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    username: str
+
+class AdminOrderItemOut(BaseModel):
+    id: int
+    product_id: int
+    quantity: int
+    price: float
+    product_name: Optional[str] = None
+    product_image: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class AdminOrderOut(BaseModel):
+    id: int
+    order_number: str
+    customer_name: str
+    customer_email: str
+    customer_phone: str
+    address: str
+    city: str
+    notes: Optional[str] = None
+    shipping_fee: float
+    total_amount: float
+    status: str
+    payment_method: str
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    items: List[AdminOrderItemOut] = []
+
+    class Config:
+        from_attributes = True
+
+class AdminOrdersResponse(BaseModel):
+    orders: List[AdminOrderOut]
+    total: int
+    page: int
+    per_page: int
+    total_pages: int
+
+class AdminStats(BaseModel):
+    total_orders: int
+    total_revenue: float
+    pending_orders: int
+    confirmed_orders: int
+    shipped_orders: int
+    delivered_orders: int
+    cancelled_orders: int
+    today_orders: int
+    today_revenue: float
+    this_week_orders: int
+    this_week_revenue: float
+
+class StatusUpdate(BaseModel):
+    status: str
+
+
 class CategoryBase(BaseModel):
     name: str
     slug: str

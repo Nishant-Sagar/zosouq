@@ -9,6 +9,7 @@ export const getCategories = () => api.get('/categories/').then(r => r.data)
 export const getCategory = (slug) => api.get(`/categories/${slug}`).then(r => r.data)
 
 export const getProducts = (params = {}) => api.get('/products/', { params }).then(r => r.data)
+export const getProductCount = (params = {}) => api.get('/products/count', { params }).then(r => r.data.count)
 export const getProduct = (slug) => api.get(`/products/${slug}`).then(r => r.data)
 
 export const createOrder = (orderData) => api.post('/orders/', orderData).then(r => r.data)
