@@ -1,24 +1,12 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import text
 from database import engine, Base, SessionLocal
 from routers import categories, products, orders
 from routers.admin import router as admin_router, ensure_default_admin
 
+# Create all tables (safe to run every startup — skips existing tables)
 Base.metadata.create_all(bind=engine)
-
-# Migrations for columns added after initial schema
-with engine.connect() as _conn:
-    try:
-        _conn.execute(text("ALTER TABLE orders ADD COLUMN shipping_fee FLOAT DEFAULT 0.0"))
-        _conn.commit()
-    except Exception:
-        pass
-    try:
-        _conn.execute(text("ALTER TABLE orders ADD COLUMN updated_at DATETIME"))
-        _conn.commit()
-    except Exception:
-        pass
 
 # Seed default admin user
 _db = SessionLocal()
@@ -29,20 +17,26 @@ finally:
 
 app = FastAPI(title="Zosouq E-Commerce API", version="1.0.0")
 
+# Allow the Vercel frontend origin + localhost for dev
+ALLOWED_ORIGINS = os.environ.get(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:5176,http://localhost:5177"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],          # tighten to ALLOWED_ORIGINS after domain is confirmed
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.include_router(categories.router, prefix="/api/categories", tags=["categories"])
-app.include_router(products.router, prefix="/api/products", tags=["products"])
-app.include_router(orders.router, prefix="/api/orders", tags=["orders"])
-app.include_router(admin_router, prefix="/api/admin", tags=["admin"])
+app.include_router(products.router,   prefix="/api/products",   tags=["products"])
+app.include_router(orders.router,     prefix="/api/orders",     tags=["orders"])
+app.include_router(admin_router,      prefix="/api/admin",      tags=["admin"])
 
 
 @app.get("/")
 def root():
-    return {"message": "Zosouq E-Commerce API is running!"}
+    return {"message": "Zosouq API is running!"}
