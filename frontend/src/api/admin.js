@@ -38,4 +38,16 @@ export const adminUpdateOrderStatus = (orderId, status) =>
 export const adminGetMe = () =>
   adminApi.get('/admin/me').then(r => r.data)
 
+export const adminGetProducts = (params = {}) =>
+  adminApi.get('/admin/products', { params }).then(r => r.data)
+
+export const adminCreateProduct = (formData) =>
+  adminApi.post('/admin/products', formData, { timeout: 60000 }).then(r => r.data)
+
+export const adminUpdateProduct = (id, formData) =>
+  adminApi.put(`/admin/products/${id}`, formData, { timeout: 60000 }).then(r => r.data)
+
+export const adminDeleteProduct = (id) =>
+  adminApi.delete(`/admin/products/${id}`).then(r => r.data)
+
 export default adminApi

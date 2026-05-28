@@ -3,14 +3,51 @@ import hashlib
 import json
 import time
 import os
+import re
+import shutil
 from datetime import datetime, timedelta
-from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Header
+from typing import Optional, List
+from pathlib import Path
+from urllib.parse import quote
+from fastapi import APIRouter, Depends, HTTPException, Header, UploadFile, File, Form
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, and_, or_
 from database import get_db
 import models
 import schemas
+
+STATIC_BASE = Path(__file__).parent.parent / "static"
+STATIC_BASE.mkdir(parents=True, exist_ok=True)
+
+ALLOWED_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+
+CATEGORY_FOLDERS = {
+    1: "livish_body_care_images",
+    2: "livish_hair_care_images",
+    3: "livish_makeup_images",
+    4: "livish_personal_care_images",
+    5: "livish_perfume_images",
+}
+
+
+def _make_slug(name: str) -> str:
+    slug = name.lower().strip()
+    slug = re.sub(r"[^\w\s-]", "", slug)
+    slug = re.sub(r"[\s_]+", "-", slug)
+    return re.sub(r"-+", "-", slug).strip("-")[:120]
+
+
+def _unique_slug(db: Session, name: str, exclude_id: int = None) -> str:
+    base = _make_slug(name)
+    slug, n = base, 1
+    while True:
+        q = db.query(models.Product).filter(models.Product.slug == slug)
+        if exclude_id:
+            q = q.filter(models.Product.id != exclude_id)
+        if not q.first():
+            return slug
+        slug, n = f"{base}-{n}", n + 1
 
 router = APIRouter()
 
@@ -268,3 +305,158 @@ def update_order_status(
 @router.get("/me")
 def get_me(admin=Depends(get_admin)):
     return {"username": admin.username, "is_active": admin.is_active, "last_login": admin.last_login}
+
+
+# ── Product Management ────────────────────────────────────
+
+@router.get("/products")
+def admin_list_products(
+    page: int = 1,
+    per_page: int = 20,
+    category_id: Optional[int] = None,
+    search: Optional[str] = None,
+    admin=Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    q = db.query(models.Product)
+    if category_id:
+        q = q.filter(models.Product.category_id == category_id)
+    if search:
+        q = q.filter(models.Product.name.ilike(f"%{search}%"))
+    total = q.count()
+    products = q.order_by(models.Product.id.desc()).offset((page - 1) * per_page).limit(per_page).all()
+    return {
+        "products": [
+            {
+                "id": p.id, "name": p.name, "slug": p.slug,
+                "price": p.price, "original_price": p.original_price,
+                "stock": p.stock, "category_id": p.category_id,
+                "image_url": p.image_url, "images": p.images,
+                "description": p.description or "",
+                "brand": p.brand or "", "is_active": p.is_active,
+                "is_featured": p.is_featured,
+            }
+            for p in products
+        ],
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": max(1, -(-total // per_page)),
+    }
+
+
+@router.post("/products")
+async def admin_create_product(
+    name: str = Form(...),
+    category_id: int = Form(...),
+    price: float = Form(...),
+    original_price: Optional[float] = Form(None),
+    stock: int = Form(0),
+    description: str = Form(""),
+    brand: str = Form(""),
+    is_featured: bool = Form(False),
+    images: List[UploadFile] = File(default=[]),
+    admin=Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    slug = _unique_slug(db, name)
+    product = models.Product(
+        name=name, slug=slug, description=description,
+        price=price, original_price=original_price if original_price else None,
+        stock=stock, category_id=category_id,
+        brand=brand or None, is_active=True, is_featured=is_featured,
+        rating=0.0, review_count=0,
+    )
+    db.add(product)
+    db.flush()
+
+    saved_urls = _save_images(product.id, name, category_id, images)
+    if saved_urls:
+        product.image_url = saved_urls[0]
+        product.images = json.dumps(saved_urls)
+
+    db.commit()
+    db.refresh(product)
+    return {"id": product.id, "slug": product.slug, "image_url": product.image_url}
+
+
+@router.put("/products/{product_id}")
+async def admin_update_product(
+    product_id: int,
+    name: str = Form(...),
+    category_id: int = Form(...),
+    price: float = Form(...),
+    original_price: Optional[float] = Form(None),
+    stock: int = Form(0),
+    description: str = Form(""),
+    brand: str = Form(""),
+    is_featured: bool = Form(False),
+    images: List[UploadFile] = File(default=[]),
+    existing_images: str = Form("[]"),
+    admin=Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    product.name = name
+    product.slug = _unique_slug(db, name, exclude_id=product_id)
+    product.description = description
+    product.price = price
+    product.original_price = original_price if original_price else None
+    product.stock = stock
+    product.category_id = category_id
+    product.brand = brand or None
+    product.is_featured = is_featured
+
+    kept = json.loads(existing_images)
+    new_urls = _save_images(product_id, name, category_id, images)
+    all_urls = kept + new_urls
+
+    if all_urls:
+        product.image_url = all_urls[0]
+        product.images = json.dumps(all_urls)
+
+    db.commit()
+    return {"id": product.id, "slug": product.slug, "image_url": product.image_url}
+
+
+@router.delete("/products/{product_id}")
+def admin_delete_product(
+    product_id: int,
+    admin=Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    folder = STATIC_DIR / str(product_id)
+    if folder.exists():
+        shutil.rmtree(folder)
+    db.query(models.OrderItem).filter(models.OrderItem.product_id == product_id).delete()
+    db.delete(product)
+    db.commit()
+    return {"deleted": product_id}
+
+
+def _save_images(product_id: int, product_name: str, category_id: int, uploads: List[UploadFile]) -> List[str]:
+    if not uploads or all(u.filename == "" for u in uploads):
+        return []
+    cat_folder = CATEGORY_FOLDERS.get(category_id, "livish_body_care_images")
+    safe_name = re.sub(r'[<>:"/\\|?*]', '', product_name.strip())[:100]
+    folder = STATIC_BASE / cat_folder / safe_name
+    folder.mkdir(parents=True, exist_ok=True)
+    existing = len(list(folder.glob("image_*")))
+    urls = []
+    for i, upload in enumerate(uploads, start=existing + 1):
+        if not upload.filename:
+            continue
+        ext = Path(upload.filename).suffix.lower()
+        if ext not in ALLOWED_EXTS:
+            continue
+        dest = folder / f"image_{i:02d}{ext}"
+        content = upload.file.read()
+        dest.write_bytes(content)
+        urls.append(f"/static/{cat_folder}/{quote(safe_name)}/image_{i:02d}{ext}")
+    return urls

@@ -1,6 +1,8 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from database import engine, Base, SessionLocal
 from routers import categories, products, orders
 from routers.admin import router as admin_router, ensure_default_admin
@@ -35,6 +37,10 @@ app.include_router(categories.router, prefix="/api/categories", tags=["categorie
 app.include_router(products.router,   prefix="/api/products",   tags=["products"])
 app.include_router(orders.router,     prefix="/api/orders",     tags=["orders"])
 app.include_router(admin_router,      prefix="/api/admin",      tags=["admin"])
+
+STATIC_DIR = Path(__file__).parent / "static"
+STATIC_DIR.mkdir(exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
 @app.get("/")

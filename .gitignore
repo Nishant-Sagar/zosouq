@@ -19,6 +19,10 @@ Extras/*_images/
 # Downloaded product images
 frontend/public/products/
 
+# Product image assets (large — deployed separately via rsync)
+backend/static/
+pictures/
+
 # Virtual environment
 .venv/
 

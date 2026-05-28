@@ -7,4 +7,4 @@ Disallow: /order-confirmation/
 Disallow: /my-orders
 Disallow: /wishlist
 
-Sitemap: https://zosouq.com/sitemap.xml
+Sitemap: https://www.zosouq.com/sitemap.xml

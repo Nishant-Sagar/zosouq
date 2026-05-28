@@ -30,11 +30,10 @@ function ProductCard({ product, compact, accentColor }) {
         {/* Image */}
         <div className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 aspect-square">
           <img
-            src={product.image_url || `https://picsum.photos/seed/${product.slug}/400/400`}
+            src={product.image_url}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
             loading="lazy"
-            onError={e => { e.target.src = `https://picsum.photos/seed/${product.id}/400/400` }}
           />
 
           {/* Discount badge */}

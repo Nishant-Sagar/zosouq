@@ -22,6 +22,7 @@ const NotFoundPage         = lazy(() => import('./pages/NotFoundPage'))
 // Admin pages (separate bundle — no store context needed)
 const AdminLoginPage     = lazy(() => import('./pages/admin/AdminLoginPage'))
 const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'))
+const AdminProductsPage  = lazy(() => import('./pages/admin/AdminProductsPage'))
 
 function PageLoader() {
   return (
@@ -82,6 +83,11 @@ export default function App() {
               <Route path="/admin/dashboard" element={
                 <Suspense fallback={<AdminLoader />}>
                   <AdminDashboardPage />
+                </Suspense>
+              } />
+              <Route path="/admin/products" element={
+                <Suspense fallback={<AdminLoader />}>
+                  <AdminProductsPage />
                 </Suspense>
               } />
               <Route path="/admin" element={

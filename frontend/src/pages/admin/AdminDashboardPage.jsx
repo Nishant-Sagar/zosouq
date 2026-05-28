@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import {
   ShoppingBag, DollarSign, Clock, CheckCircle, Truck, XCircle,
   Search, ChevronLeft, ChevronRight, LogOut, RefreshCw,
   Package, User, Phone, MapPin, Calendar, Filter, X,
-  TrendingUp, ArrowUpRight, Eye, ChevronDown,
+  TrendingUp, ArrowUpRight, Eye, ChevronDown, Tag,
 } from 'lucide-react'
 import { adminGetStats, adminGetOrders, adminUpdateOrderStatus } from '../../api/admin'
 
@@ -328,6 +328,15 @@ export default function AdminDashboardPage() {
             <span className="text-gray-700">/</span>
             <span className="text-sm text-gray-400">Admin Dashboard</span>
           </div>
+          <nav className="hidden sm:flex items-center gap-1 ml-4">
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white/10 text-white">
+              <ShoppingBag className="w-3.5 h-3.5" /> Orders
+            </span>
+            <Link to="/admin/products"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+              <Tag className="w-3.5 h-3.5" /> Products
+            </Link>
+          </nav>
           <div className="flex items-center gap-3">
             <button onClick={() => { loadStats(); loadOrders() }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition-all">

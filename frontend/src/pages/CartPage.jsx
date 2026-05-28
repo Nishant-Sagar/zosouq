@@ -85,11 +85,10 @@ export default function CartPage() {
                 <Link to={`/product/${item.slug}`} className="flex-shrink-0">
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-gray-50">
                     <img
-                      src={item.image_url || `https://picsum.photos/seed/${item.slug}/200/200`}
+                      src={item.image_url}
                       alt={item.name}
                       className="w-full h-full object-cover"
                       loading="lazy" decoding="async"
-                      onError={e => { e.target.src = `https://picsum.photos/seed/${item.id}/200/200` }}
                     />
                   </div>
                 </Link>

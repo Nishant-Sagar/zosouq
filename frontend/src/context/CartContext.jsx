@@ -50,33 +50,47 @@ export function ToastProvider({ children }) {
 
   const addToast = useCallback((message, type = 'success') => {
     const id = Date.now()
+    if (type === 'success' && navigator.vibrate) navigator.vibrate(40)
     setToasts(prev => [...prev, { id, message, type }])
-    setTimeout(() => removeToast(id), 2500)
+    setTimeout(() => removeToast(id), 2800)
   }, [removeToast])
 
   return (
     <ToastContext.Provider value={addToast}>
       {children}
-      <div className="fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none">
+      <div className="fixed bottom-20 sm:bottom-8 left-0 right-0 z-50 flex flex-col items-center gap-2 pointer-events-none px-4">
         {toasts.map(toast => (
           <div
             key={toast.id}
-            className="toast-enter pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl text-sm font-medium max-w-sm"
-            style={
-              toast.type === 'success' ? { background: '#1A0800', color: '#C8A43A', border: '1px solid rgba(200,164,58,0.4)' }
-              : toast.type === 'error' ? { background: '#3D0000', color: '#FCA5A5', border: '1px solid rgba(239,68,68,0.4)' }
-              : { background: '#1A0800', color: '#E8D5A3', border: '1px solid rgba(200,164,58,0.3)' }
-            }
+            className="toast-enter pointer-events-auto w-full max-w-xs sm:max-w-sm"
           >
-            <span>{toast.type === 'success' ? '✓' : toast.type === 'error' ? '✕' : 'ℹ'}</span>
-            <span className="flex-1">{toast.message}</span>
-            <button
-              onClick={() => removeToast(toast.id)}
-              className="ml-1 opacity-60 hover:opacity-100 transition-opacity text-current"
-              aria-label="Dismiss"
+            <div className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl shadow-2xl text-sm font-medium
+              ${toast.type === 'success'
+                ? 'bg-gray-900 text-white border border-white/10'
+                : toast.type === 'error'
+                ? 'bg-red-600 text-white'
+                : 'bg-gray-900 text-gray-200 border border-white/10'
+              }`}
+              style={{ backdropFilter: 'blur(12px)' }}
             >
-              ✕
-            </button>
+              {toast.type === 'success' ? (
+                <div className="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              ) : toast.type === 'error' ? (
+                <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">✕</div>
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 text-white/70 text-xs">i</div>
+              )}
+              <span className="flex-1 leading-snug">{toast.message}</span>
+              <button onClick={() => removeToast(toast.id)} className="ml-1 w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors text-white/50 hover:text-white flex-shrink-0">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
           </div>
         ))}
       </div>

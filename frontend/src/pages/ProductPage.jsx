@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ShoppingCart, Star, ChevronLeft, Package, Truck, Shield, Minus, Plus, CheckCircle, ChevronRight, Heart, Share2, Sparkles } from 'lucide-react'
 import { getProduct, getProducts } from '../api'
@@ -32,6 +32,47 @@ export default function ProductPage() {
   const [qty, setQty] = useState(1)
   const [added, setAdded] = useState(false)
   const [activeImg, setActiveImg] = useState(0)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [dragX, setDragX] = useState(0)
+  const [lbDragX, setLbDragX] = useState(0)
+  const touchStartX = useRef(null)
+  const lbTouchStartX = useRef(null)
+  const isDragging = useRef(false)
+
+  const goTo = (i, total) => setActiveImg(((i % total) + total) % total)
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX
+    isDragging.current = false
+  }
+  const handleTouchMove = (e) => {
+    if (touchStartX.current === null) return
+    const d = e.touches[0].clientX - touchStartX.current
+    isDragging.current = true
+    setDragX(d)
+  }
+  const handleTouchEnd = (e, total) => {
+    if (touchStartX.current === null) return
+    const delta = touchStartX.current - e.changedTouches[0].clientX
+    setDragX(0)
+    if (Math.abs(delta) > 40) goTo(activeImg + (delta > 0 ? 1 : -1), total)
+    touchStartX.current = null
+    isDragging.current = false
+  }
+
+  const handleLbTouchStart = (e) => { lbTouchStartX.current = e.touches[0].clientX }
+  const handleLbTouchMove = (e) => {
+    if (lbTouchStartX.current === null) return
+    setLbDragX(e.touches[0].clientX - lbTouchStartX.current)
+  }
+  const handleLbTouchEnd = (e, total) => {
+    if (lbTouchStartX.current === null) return
+    const delta = lbTouchStartX.current - e.changedTouches[0].clientX
+    setLbDragX(0)
+    if (Math.abs(delta) > 40) goTo(activeImg + (delta > 0 ? 1 : -1), total)
+    lbTouchStartX.current = null
+  }
+
   const { dispatch } = useCart()
   const { dispatch: wishlistDispatch, isWishlisted } = useWishlist()
   const addToast = useToast()
@@ -149,9 +190,10 @@ export default function ProductPage() {
   return (
     <div className="min-h-screen bg-gray-50/50">
       <SEO
-        title={product.brand ? `${product.name} — ${product.brand}` : product.name}
-        description={`Buy ${product.name}${product.brand ? ` by ${product.brand}` : ''} in Kuwait. ${product.description?.slice(0, 100)}... Same-day delivery. KD ${product.price.toFixed(3)}.`}
-        image={product.image_url}
+        title={product.brand ? `${product.name} by ${product.brand}` : product.name}
+        description={`Buy ${product.name}${product.brand ? ` by ${product.brand}` : ''} in Kuwait. ${product.description?.trim().slice(0, 120) || `Shop authentic ${product.category?.name || 'beauty'} products`}. KD ${product.price.toFixed(3)}. Same-day delivery across Kuwait. Free delivery over KD 10.`}
+        keywords={[product.name, product.brand, product.category?.name, 'Kuwait', 'buy online', 'same-day delivery'].filter(Boolean).join(', ')}
+        image={product.image_url?.startsWith('http') ? product.image_url : `https://www.zosouq.com${product.image_url}`}
         path={`/product/${product.slug}`}
         type="product"
         jsonLd={productJsonLd}
@@ -181,60 +223,69 @@ export default function ProductPage() {
 
             {/* ── Image Gallery ── */}
             <div className="flex flex-col gap-3">
-              <div className="relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-white group">
-                <img
-                  src={allImages[activeImg] || `https://picsum.photos/seed/${product.slug}/600/600`}
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  loading="eager" fetchPriority="high" decoding="async"
-                  onError={e => { e.target.src = `https://picsum.photos/seed/${product.id}/600/600` }}
-                />
+              <div className="relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-white select-none"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={e => handleTouchEnd(e, allImages.length)}
+              >
+                {/* Sliding strip */}
+                <div
+                  className="flex h-full"
+                  style={{
+                    width: `${allImages.length * 100}%`,
+                    transform: `translateX(calc(-${activeImg * (100 / allImages.length)}% + ${dragX / allImages.length}px))`,
+                    transition: dragX !== 0 ? 'none' : 'transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                    willChange: 'transform',
+                  }}
+                >
+                  {allImages.map((img, i) => (
+                    <div key={i} className="h-full flex-shrink-0 cursor-zoom-in" style={{ width: `${100 / allImages.length}%` }}
+                      onClick={() => !isDragging.current && setLightboxOpen(true)}>
+                      <img src={img} alt={`${product.name} ${i + 1}`}
+                        className="w-full h-full object-cover"
+                        loading={i === 0 ? 'eager' : 'lazy'}
+                        fetchPriority={i === 0 ? 'high' : 'auto'}
+                        draggable={false}
+                      />
+                    </div>
+                  ))}
+                </div>
 
                 {/* Discount badge */}
                 {discount && (
-                  <div className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs sm:text-sm font-bold px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-xl shadow-lg">
+                  <div className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs sm:text-sm font-bold px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-xl shadow-lg pointer-events-none">
                     {discount}% OFF
                   </div>
                 )}
 
-                {/* Wishlist button on image */}
+                {/* Wishlist */}
                 <button
                   onClick={() => {
                     wishlistDispatch({ type: 'TOGGLE', payload: product })
                     addToast(wishlisted ? `${product.name} removed from wishlist` : `${product.name} added to wishlist`)
                   }}
                   className={`absolute top-3 right-3 sm:top-4 sm:right-4 w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-lg ${
-                    wishlisted
-                      ? 'bg-pink-500 text-white'
-                      : 'bg-white/90 backdrop-blur-sm text-gray-500 hover:text-pink-500'
+                    wishlisted ? 'bg-pink-500 text-white' : 'bg-white/90 backdrop-blur-sm text-gray-500 hover:text-pink-500'
                   }`}
                 >
                   <Heart className={`w-5 h-5 ${wishlisted ? 'fill-white' : ''}`} />
                 </button>
 
-                {/* Prev / Next arrows */}
+                {/* Arrows — hidden on touch devices */}
                 {allImages.length > 1 && (
                   <>
-                    <button
-                      onClick={() => setActiveImg(i => (i - 1 + allImages.length) % allImages.length)}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm shadow-md flex items-center justify-center hover:bg-white transition-colors"
-                    >
+                    <button onClick={() => goTo(activeImg - 1, allImages.length)}
+                      className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm shadow-md items-center justify-center hover:bg-white transition-colors">
                       <ChevronLeft className="w-5 h-5 text-gray-700" />
                     </button>
-                    <button
-                      onClick={() => setActiveImg(i => (i + 1) % allImages.length)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm shadow-md flex items-center justify-center hover:bg-white transition-colors"
-                    >
+                    <button onClick={() => goTo(activeImg + 1, allImages.length)}
+                      className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm shadow-md items-center justify-center hover:bg-white transition-colors">
                       <ChevronRight className="w-5 h-5 text-gray-700" />
                     </button>
-                    {/* Dot indicators */}
-                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/20 backdrop-blur-sm px-2.5 py-1.5 rounded-full">
+                    {/* Dots */}
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/20 backdrop-blur-sm px-2.5 py-1.5 rounded-full pointer-events-none">
                       {allImages.map((_, i) => (
-                        <button
-                          key={i}
-                          onClick={() => setActiveImg(i)}
-                          className={`w-2 h-2 rounded-full transition-all ${i === activeImg ? 'bg-white w-4' : 'bg-white/50'}`}
-                        />
+                        <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === activeImg ? 'bg-white w-4' : 'bg-white/50 w-1.5'}`} />
                       ))}
                     </div>
                   </>
@@ -257,7 +308,6 @@ export default function ProductPage() {
                         alt={`${product.name} view ${i + 1}`}
                         className="w-full h-full object-cover"
                         loading="lazy" decoding="async"
-                        onError={e => { e.target.src = `https://picsum.photos/seed/${product.id + i}/100/100` }}
                       />
                     </button>
                   ))}
@@ -425,6 +475,67 @@ export default function ProductPage() {
             </div>
           </div>
         </section>
+      )}
+
+      {/* ═══ LIGHTBOX ═══ */}
+      {lightboxOpen && allImages.length > 0 && (
+        <div className="fixed inset-0 z-[100] bg-black flex flex-col select-none">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 bg-gradient-to-b from-black/60 to-transparent absolute top-0 left-0 right-0 z-10">
+            <button onClick={() => setLightboxOpen(false)}
+              className="flex items-center gap-1.5 text-white/80 hover:text-white active:scale-95 transition-all">
+              <ChevronLeft className="w-5 h-5" />
+              <span className="text-sm font-medium">Back</span>
+            </button>
+            <span className="text-white/60 text-sm font-medium">{activeImg + 1} / {allImages.length}</span>
+            <button onClick={() => setLightboxOpen(false)}
+              className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 active:scale-95 transition-all">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+          </div>
+
+          {/* Sliding image strip */}
+          <div className="flex-1 overflow-hidden"
+            onTouchStart={handleLbTouchStart}
+            onTouchMove={handleLbTouchMove}
+            onTouchEnd={e => handleLbTouchEnd(e, allImages.length)}
+          >
+            <div className="flex h-full items-center"
+              style={{
+                width: `${allImages.length * 100}%`,
+                transform: `translateX(calc(-${activeImg * (100 / allImages.length)}% + ${lbDragX / allImages.length}px))`,
+                transition: lbDragX !== 0 ? 'none' : 'transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                willChange: 'transform',
+              }}
+            >
+              {allImages.map((img, i) => (
+                <div key={i} className="flex items-center justify-center px-2" style={{ width: `${100 / allImages.length}%`, height: '100%' }}>
+                  <img src={img} alt={`${product.name} ${i + 1}`}
+                    className="max-w-full max-h-full object-contain"
+                    draggable={false}
+                    loading={i === activeImg ? 'eager' : 'lazy'}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Thumbnail strip */}
+          {allImages.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto px-4 py-3 flex-shrink-0 no-scrollbar bg-gradient-to-t from-black/60 to-transparent">
+              {allImages.map((img, i) => (
+                <button key={i} onClick={() => setActiveImg(i)}
+                  className={`flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden border-2 transition-all duration-200 ${
+                    i === activeImg ? 'border-white scale-105' : 'border-transparent opacity-40 hover:opacity-70'
+                  }`}>
+                  <img src={img} alt="" className="w-full h-full object-cover" draggable={false} />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
   )
