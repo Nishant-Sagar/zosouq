@@ -50,6 +50,7 @@ export default function WishlistPage() {
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50/50">
+        <SEO title="My Wishlist" noIndex={true} path="/wishlist" />
         {/* Poster header even when empty */}
         <section className="pt-4 sm:pt-6 pb-2">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
@@ -87,7 +88,7 @@ export default function WishlistPage() {
   /* ═══ MAIN WISHLIST ═══ */
   return (
     <div className="min-h-screen bg-gray-50/50">
-      <SEO title="My Wishlist" noIndex={true} />
+      <SEO title="My Wishlist" noIndex={true} path="/wishlist" />
 
       {/* ═══ POSTER HEADER ═══ */}
       <section className="pt-4 sm:pt-6 pb-2">

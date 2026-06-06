@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, ArrowRight, Truck, Shield, RotateCcw, Headphones, Zap, Clock, MapPin, Package, Percent, Sparkles, Award, Tag } from 'lucide-react'
-import { getCategories, getProducts } from '../api'
+import { getCategories, getProducts, getBanner } from '../api'
 import ProductCard from '../components/ProductCard'
 import SEO from '../components/SEO'
 
@@ -84,6 +84,40 @@ const PERKS = [
   { icon: Headphones, title: '24/7 Support',    sub: 'We are here to help',  color: 'text-white', iconBg: 'bg-purple-500',  cardBg: 'bg-gradient-to-br from-purple-50 to-violet-100', border: 'border-purple-200',  accent: 'text-purple-700' },
 ]
 
+const BADGE_COLORS = {
+  red: '#dc2626', amber: '#d97706', emerald: '#059669',
+  blue: '#2563eb', violet: '#7c3aed', pink: '#db2777',
+}
+
+const DEFAULT_SALE_POSTER_1 = {
+  img: '/images/luxury-perfumes.webp',
+  link: '/category/perfumes',
+  badgeText: 'UP TO 70% OFF',
+  badgeIcon: 'percent',
+  badgeColor: 'red',
+  eyebrow: 'Exclusive Deals',
+  title: 'Luxury Perfumes at Unbeatable Prices',
+  cta: 'Shop the Sale',
+}
+
+const DEFAULT_SALE_POSTER_2 = {
+  img: '/images/hair-care-category.webp',
+  link: '/category/hair-care',
+  badgeText: 'NEW SEASON',
+  badgeIcon: 'sparkles',
+  badgeColor: 'amber',
+  eyebrow: 'Fresh Arrivals',
+  title: 'Hair Care Essentials',
+  cta: 'Browse Collection',
+}
+
+const DEFAULT_DELIVERY_BANNER = {
+  img: '/images/free-delivery.webp',
+  title: 'Same-Day Delivery\nAnywhere in Kuwait',
+  description: 'Order today, receive today. Free delivery on orders over KD 10. Cash on delivery available.',
+  tags: 'All Kuwait Areas,Same-Day Delivery,Cash on Delivery',
+}
+
 /* ────────────────────────────────────────────────────────
    Product Carousel (with arrows like Livish)
    ──────────────────────────────────────────────────────── */
@@ -163,6 +197,11 @@ export default function HomePage() {
   const [loading, setLoading]           = useState(true)
   const [slide, setSlide]               = useState(0)
 
+  const [heroSlides, setHeroSlides]           = useState(HERO_SLIDES)
+  const [salePoster1, setSalePoster1]         = useState(DEFAULT_SALE_POSTER_1)
+  const [salePoster2, setSalePoster2]         = useState(DEFAULT_SALE_POSTER_2)
+  const [deliveryBanner, setDeliveryBanner]   = useState(DEFAULT_DELIVERY_BANNER)
+
   useEffect(() => {
     Promise.all([
       getCategories(),
@@ -177,6 +216,26 @@ export default function HomePage() {
   }, [])
 
   useEffect(() => {
+    Promise.allSettled([
+      getBanner('home_hero_slide_1'),
+      getBanner('home_hero_slide_2'),
+      getBanner('home_hero_slide_3'),
+      getBanner('home_sale_poster_1'),
+      getBanner('home_sale_poster_2'),
+      getBanner('home_delivery_banner'),
+    ]).then(([s1, s2, s3, p1, p2, del]) => {
+      const slides = HERO_SLIDES.map((def, i) => {
+        const val = [s1.value, s2.value, s3.value][i]
+        return val ? { ...def, ...val } : def
+      })
+      setHeroSlides(slides)
+      if (p1.value) setSalePoster1(prev => ({ ...prev, ...p1.value }))
+      if (p2.value) setSalePoster2(prev => ({ ...prev, ...p2.value }))
+      if (del.value) setDeliveryBanner(prev => ({ ...prev, ...del.value }))
+    })
+  }, [])
+
+  useEffect(() => {
     const t = setInterval(() => setSlide(s => (s + 1) % HERO_SLIDES.length), 5000)
     return () => clearInterval(t)
   }, [])
@@ -186,8 +245,8 @@ export default function HomePage() {
       '@context': 'https://schema.org',
       '@type': 'Organization',
       name: 'Zosouq',
-      url: 'https://zosouq.com',
-      logo: 'https://zosouq.com/images/luxury-perfumes.webp',
+      url: 'https://www.zosouq.com',
+      logo: 'https://www.zosouq.com/images/luxury-perfumes.webp',
       description: "Kuwait's premier same-day beauty and perfume delivery platform.",
       address: { '@type': 'PostalAddress', addressCountry: 'KW' },
     },
@@ -195,13 +254,18 @@ export default function HomePage() {
       '@context': 'https://schema.org',
       '@type': 'WebSite',
       name: 'Zosouq',
-      url: 'https://zosouq.com',
+      url: 'https://www.zosouq.com',
       potentialAction: {
         '@type': 'SearchAction',
-        target: { '@type': 'EntryPoint', urlTemplate: 'https://zosouq.com/search?q={search_term_string}' },
+        target: { '@type': 'EntryPoint', urlTemplate: 'https://www.zosouq.com/search?q={search_term_string}' },
         'query-input': 'required name=search_term_string',
       },
     },
+    { '@context': 'https://schema.org', '@type': 'SiteNavigationElement', name: 'Perfumes',      url: 'https://www.zosouq.com/category/perfumes' },
+    { '@context': 'https://schema.org', '@type': 'SiteNavigationElement', name: 'Makeup',        url: 'https://www.zosouq.com/category/makeup' },
+    { '@context': 'https://schema.org', '@type': 'SiteNavigationElement', name: 'Hair Care',     url: 'https://www.zosouq.com/category/hair-care' },
+    { '@context': 'https://schema.org', '@type': 'SiteNavigationElement', name: 'Body Care',     url: 'https://www.zosouq.com/category/body-care' },
+    { '@context': 'https://schema.org', '@type': 'SiteNavigationElement', name: 'Personal Care', url: 'https://www.zosouq.com/category/personal-care' },
   ]
 
   return (
@@ -218,7 +282,7 @@ export default function HomePage() {
       <section className="relative overflow-hidden bg-white">
         <div className="max-w-[1600px] mx-auto px-3 sm:px-6 py-3 sm:py-5">
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl" style={{ height: 'clamp(260px, 38vw, 400px)' }}>
-            {HERO_SLIDES.map((s, i) => (
+            {heroSlides.map((s, i) => (
               <div key={i} className="absolute inset-0 transition-all duration-[1200ms] ease-in-out"
                 style={{ opacity: i === slide ? 1 : 0, transform: i === slide ? 'scale(1)' : 'scale(1.04)' }}>
                 <img src={s.img} alt={s.title} className="absolute inset-0 w-full h-full object-cover" loading={i === 0 ? 'eager' : 'lazy'} />
@@ -264,7 +328,7 @@ export default function HomePage() {
 
             {/* Dots */}
             <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2">
-              {HERO_SLIDES.map((_, i) => (
+              {heroSlides.map((_, i) => (
                 <button key={i} onClick={() => setSlide(i)}
                   className={`h-2 sm:h-2.5 rounded-full transition-all duration-500 ${i === slide ? 'w-7 sm:w-8 bg-white shadow-md' : 'w-2 sm:w-2.5 bg-white/40 hover:bg-white/60'}`} />
               ))}
@@ -387,49 +451,33 @@ export default function HomePage() {
       <section className="py-4 sm:py-6">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Sale Banner 1 */}
-            <Link to="/category/perfumes"
-              className="group relative rounded-2xl overflow-hidden flex items-end" style={{ minHeight: '200px' }}>
-              <img src="/images/luxury-perfumes.webp" alt="Perfume sale"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" decoding="async" />
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-950/85 via-gray-950/40 to-transparent" />
-              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
-                <div className="bg-red-600 text-white px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold flex items-center gap-1 sm:gap-1.5 shadow-lg">
-                  <Percent className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> UP TO 70% OFF
+            {[salePoster1, salePoster2].map((poster, idx) => (
+              <Link key={idx} to={poster.link}
+                className="group relative rounded-2xl overflow-hidden flex items-end" style={{ minHeight: '200px' }}>
+                <img src={poster.img} alt={poster.title}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" decoding="async" />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-950/85 via-gray-950/40 to-transparent" />
+                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
+                  <div
+                    className="text-white px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold flex items-center gap-1 sm:gap-1.5 shadow-lg"
+                    style={{ backgroundColor: BADGE_COLORS[poster.badgeColor] || '#dc2626' }}
+                  >
+                    {poster.badgeIcon === 'sparkles'
+                      ? <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                      : <Percent className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    }
+                    {poster.badgeText}
+                  </div>
                 </div>
-              </div>
-              <div className="relative z-10 p-5 sm:p-7">
-                <p className="text-white/50 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1">Exclusive Deals</p>
-                <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">
-                  Luxury Perfumes<br/>at Unbeatable Prices
-                </h3>
-                <span className="inline-flex items-center gap-1.5 text-white text-xs sm:text-sm font-semibold mt-2 sm:mt-3 group-hover:gap-2.5 transition-all">
-                  Shop the Sale <ArrowRight className="w-4 h-4" />
-                </span>
-              </div>
-            </Link>
-
-            {/* Sale Banner 2 */}
-            <Link to="/category/hair-care"
-              className="group relative rounded-2xl overflow-hidden flex items-end" style={{ minHeight: '200px' }}>
-              <img src="/images/hair-care-category.webp" alt="Hair care deals"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" decoding="async" />
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-950/85 via-gray-950/40 to-transparent" />
-              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
-                <div className="bg-amber-600 text-white px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold flex items-center gap-1 sm:gap-1.5 shadow-lg">
-                  <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> NEW SEASON
+                <div className="relative z-10 p-5 sm:p-7">
+                  <p className="text-white/50 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1">{poster.eyebrow}</p>
+                  <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">{poster.title}</h3>
+                  <span className="inline-flex items-center gap-1.5 text-white text-xs sm:text-sm font-semibold mt-2 sm:mt-3 group-hover:gap-2.5 transition-all">
+                    {poster.cta} <ArrowRight className="w-4 h-4" />
+                  </span>
                 </div>
-              </div>
-              <div className="relative z-10 p-5 sm:p-7">
-                <p className="text-white/50 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1">Fresh Arrivals</p>
-                <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">
-                  Hair Care<br/>Essentials
-                </h3>
-                <span className="inline-flex items-center gap-1.5 text-white text-xs sm:text-sm font-semibold mt-2 sm:mt-3 group-hover:gap-2.5 transition-all">
-                  Browse Collection <ArrowRight className="w-4 h-4" />
-                </span>
-              </div>
-            </Link>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
@@ -453,7 +501,7 @@ export default function HomePage() {
       <section className="py-6 sm:py-8">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden group" style={{ minHeight: 'clamp(280px, 45vw, 340px)' }}>
-            <img src="/images/free-delivery.webp" alt="Free delivery across Kuwait"
+            <img src={deliveryBanner.img} alt={deliveryBanner.title}
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-[1.02]" loading="lazy" decoding="async" />
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/90 via-emerald-900/70 to-emerald-900/40" />
             <div className="absolute inset-0 flex items-center">
@@ -470,13 +518,15 @@ export default function HomePage() {
                   </div>
                 </div>
                 <h2 className="text-xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 leading-tight">
-                  Same-Day Delivery<br/>Anywhere in Kuwait
+                  {deliveryBanner.title.split('\n').map((line, i, arr) => (
+                    <span key={i}>{line}{i < arr.length - 1 && <br/>}</span>
+                  ))}
                 </h2>
-                <p className="text-white/60 text-xs sm:text-sm mb-4 sm:mb-5">Order today, receive today. Free delivery on orders over KD 10. Cash on delivery available.</p>
+                <p className="text-white/60 text-xs sm:text-sm mb-4 sm:mb-5">{deliveryBanner.description}</p>
                 <div className="flex flex-wrap gap-2">
-                  <span className="bg-white/10 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10">All Kuwait Areas</span>
-                  <span className="bg-white/10 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10">Same-Day Delivery</span>
-                  <span className="bg-white/10 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10">Cash on Delivery</span>
+                  {(deliveryBanner.tags || '').split(',').map(t => t.trim()).filter(Boolean).map(tag => (
+                    <span key={tag} className="bg-white/10 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10">{tag}</span>
+                  ))}
                 </div>
               </div>
             </div>
@@ -619,47 +669,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════════
-          BRAND STORY / TRUST SECTION
-          ════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden bg-gray-950 py-14 sm:py-20">
-        <img src="/images/brand-story.webp"
-          alt="" className="absolute inset-0 w-full h-full object-cover opacity-15" loading="lazy" decoding="async" />
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-gray-950/80 to-gray-950/50" />
-        <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/60 text-xs font-semibold mb-5">
-                <Shield className="w-3.5 h-3.5" /> Why Choose Zosouq
-              </div>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 leading-tight">
-                Kuwait's Most Trusted<br/>Beauty Destination
-              </h2>
-              <p className="text-gray-400 leading-relaxed mb-8 text-sm max-w-lg">
-                We source every product directly from authorized distributors. 100% authentic, beautifully packaged, delivered to your doorstep the same day you order.
-              </p>
-              <div className="grid grid-cols-3 gap-6 sm:gap-10">
-                {[
-                  { n: '4,400+', l: 'Products' },
-                  { n: '15K+', l: 'Happy Customers' },
-                  { n: 'Same Day', l: 'Delivery' },
-                ].map(s => (
-                  <div key={s.l}>
-                    <p className="text-2xl sm:text-3xl font-bold text-rose-400">{s.n}</p>
-                    <p className="text-xs text-gray-500 mt-1">{s.l}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="hidden lg:grid grid-cols-2 gap-4">
-              <img src="/images/makeup-tools.webp"
-                alt="Perfume collection" className="rounded-2xl object-cover w-full h-60 shadow-2xl ring-1 ring-white/10" loading="lazy" decoding="async" />
-              <img src="/images/makeup-collection.webp"
-                alt="Makeup collection" className="rounded-2xl object-cover w-full h-60 mt-8 shadow-2xl ring-1 ring-white/10" loading="lazy" decoding="async" />
-            </div>
-          </div>
-        </div>
-      </section>
 
 </div>
   )

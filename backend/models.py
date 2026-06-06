@@ -37,6 +37,7 @@ class Product(Base):
     review_count = Column(Integer, default=0)
     is_featured = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
+    is_staged = Column(Boolean, default=False)
     tags = Column(String(500), nullable=True)
 
     category = relationship("Category", back_populates="products")
@@ -91,3 +92,12 @@ class AdminUser(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     last_login = Column(DateTime, nullable=True)
+
+
+class Banner(Base):
+    __tablename__ = "banners"
+
+    id = Column(Integer, primary_key=True, index=True)
+    location = Column(String(100), unique=True, index=True)
+    data = Column(Text)  # JSON blob
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

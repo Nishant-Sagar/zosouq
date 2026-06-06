@@ -50,4 +50,28 @@ export const adminUpdateProduct = (id, formData) =>
 export const adminDeleteProduct = (id) =>
   adminApi.delete(`/admin/products/${id}`).then(r => r.data)
 
+export const adminPublishProduct = (id) =>
+  adminApi.put(`/admin/products/${id}/publish`).then(r => r.data)
+
+export const adminStageProduct = (id) =>
+  adminApi.put(`/admin/products/${id}/stage`).then(r => r.data)
+
+export const adminExportProducts = (params = {}) => {
+  const qs = new URLSearchParams()
+  Object.entries(params).forEach(([k, v]) => { if (v !== '' && v !== null && v !== undefined) qs.set(k, v) })
+  return adminApi.get(`/admin/products/export?${qs}`, { responseType: 'blob' }).then(r => r.data)
+}
+
+export const adminGetBanners = () =>
+  adminApi.get('/admin/banners').then(r => r.data)
+
+export const adminUpdateBanner = (location, data) =>
+  adminApi.put(`/admin/banners/${location}`, data).then(r => r.data)
+
+export const adminUploadBannerImage = (location, file) => {
+  const form = new FormData()
+  form.append('image', file)
+  return adminApi.post(`/admin/banners/${location}/upload-image`, form).then(r => r.data)
+}
+
 export default adminApi

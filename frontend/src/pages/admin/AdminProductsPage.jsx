@@ -1,13 +1,15 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import {
-  Plus, Search, X, Edit2, Trash2, Upload, Image,
-  ChevronLeft, ChevronRight, LogOut, Package,
-  ShoppingBag, Tag, AlertCircle, Check,
+  Plus, Search, X, Edit2, Trash2, Upload, Image, Download,
+  ChevronLeft, ChevronRight, ChevronDown, LogOut, Package, Layout,
+  ShoppingBag, Tag, AlertCircle, Check, SendToBack, Rocket, Loader,
 } from 'lucide-react'
 import {
   adminGetProducts, adminCreateProduct,
   adminUpdateProduct, adminDeleteProduct,
+  adminPublishProduct, adminStageProduct,
+  adminExportProducts,
 } from '../../api/admin'
 
 const CATEGORIES = [
@@ -315,6 +317,168 @@ function DeleteConfirm({ product, onConfirm, onCancel }) {
   )
 }
 
+// ── Export Modal ──────────────────────────────────────────
+const EXPORT_FILTERS = [
+  { value: '',              label: 'All products'         },
+  { value: 'missing_desc',  label: 'Missing Description'  },
+  { value: 'missing_price', label: 'Missing Price'        },
+  { value: 'out_of_stock',  label: 'Out of Stock'         },
+  { value: 'low_stock',     label: 'Low Stock (≤5)'       },
+  { value: 'no_image',      label: 'No Image'             },
+  { value: 'featured',      label: 'Featured Only'        },
+]
+
+function ExportModal({ onClose }) {
+  const [category, setCategory] = useState(0)
+  const [filter, setFilter]     = useState('')
+  const [staged, setStaged]     = useState(false)
+  const [count, setCount]       = useState(null)
+  const [counting, setCounting] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+
+  const buildParams = () => {
+    const p = { staged }
+    if (category) p.category_id = category
+    if (filter === 'missing_desc')  p.missing_desc  = true
+    if (filter === 'missing_price') p.missing_price = true
+    if (filter === 'out_of_stock')  p.out_of_stock  = true
+    if (filter === 'low_stock')     p.low_stock     = true
+    if (filter === 'no_image')      p.no_image      = true
+    if (filter === 'featured')      p.featured_only = true
+    return p
+  }
+
+  useEffect(() => {
+    setCounting(true)
+    setCount(null)
+    adminGetProducts({ ...buildParams(), page: 1, per_page: 1 })
+      .then(d => setCount(d.total))
+      .catch(() => setCount(null))
+      .finally(() => setCounting(false))
+  }, [category, filter, staged])
+
+  const handleDownload = async () => {
+    setDownloading(true)
+    try {
+      const blob = await adminExportProducts(buildParams())
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href     = url
+      a.download = 'zosouq_catalog.tsv'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      onClose()
+    } catch {
+      // silent — user will notice no download
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div
+        className="relative w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl p-6"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <p className="text-xs text-gray-500 mb-0.5">Facebook Catalog Format</p>
+            <h2 className="text-lg font-bold text-white">Export Products</h2>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="space-y-5">
+          {/* Product type */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Product Type</label>
+            <div className="flex gap-2">
+              {[{ label: 'Live', value: false }, { label: 'Staging', value: true }].map(opt => (
+                <button key={String(opt.value)} type="button"
+                  onClick={() => setStaged(opt.value)}
+                  className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${
+                    staged === opt.value ? 'bg-white text-gray-900' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-500'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Category */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Category</label>
+            <div className="flex flex-wrap gap-1.5">
+              <button onClick={() => setCategory(0)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${category === 0 ? 'bg-white text-gray-900' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:text-white'}`}>
+                All
+              </button>
+              {CATEGORIES.map(c => (
+                <button key={c.id} onClick={() => setCategory(c.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${category === c.id ? 'bg-white text-gray-900' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:text-white'}`}>
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick filter */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Filter</label>
+            <div className="grid grid-cols-2 gap-1.5">
+              {EXPORT_FILTERS.map(opt => (
+                <button key={opt.value} type="button"
+                  onClick={() => setFilter(opt.value)}
+                  className={`px-3 py-2 rounded-lg text-xs font-medium text-left transition-all ${
+                    filter === opt.value
+                      ? 'bg-rose-500/20 border border-rose-500/40 text-rose-300'
+                      : 'bg-gray-800 text-gray-400 border border-gray-700 hover:text-white hover:border-gray-500'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Count badge */}
+          <div className="bg-gray-800/60 border border-gray-700 rounded-xl px-4 py-3 flex items-center justify-between">
+            <span className="text-sm text-gray-400">Products to export</span>
+            {counting
+              ? <Loader className="w-4 h-4 animate-spin text-gray-500" />
+              : <span className="text-lg font-bold text-white">{count?.toLocaleString() ?? '—'}</span>
+            }
+          </div>
+
+          {/* Download button */}
+          <button
+            onClick={handleDownload}
+            disabled={downloading || counting || count === 0}
+            className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-rose-500 to-fuchsia-600 hover:from-rose-400 hover:to-fuchsia-500 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 shadow-lg"
+          >
+            {downloading
+              ? <><Loader className="w-4 h-4 animate-spin" /> Generating…</>
+              : <><Download className="w-4 h-4" /> Download TSV ({count?.toLocaleString() ?? '…'} rows)</>
+            }
+          </button>
+
+          <p className="text-center text-[11px] text-gray-600">
+            Tab-separated · Facebook Catalog format · Includes sale prices
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main page ─────────────────────────────────────────────
 export default function AdminProductsPage() {
   const navigate = useNavigate()
@@ -328,6 +492,11 @@ export default function AdminProductsPage() {
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState(0)
+  const [quickFilter, setQuickFilter] = useState('') // '' | 'missing_desc' | 'missing_price' | 'out_of_stock' | 'low_stock' | 'no_image' | 'featured'
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState('active') // 'active' | 'staged'
+  const [publishError, setPublishError] = useState(null) // { product, errors[] }
+  const [showExport, setShowExport] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [editProduct, setEditProduct] = useState(null)
   const [deleteProduct, setDeleteProduct] = useState(null)
@@ -342,16 +511,22 @@ export default function AdminProductsPage() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const params = { page, per_page: PER_PAGE }
+      const params = { page, per_page: PER_PAGE, staged: activeTab === 'staged' }
       if (search) params.search = search
       if (categoryFilter) params.category_id = categoryFilter
+      if (quickFilter === 'missing_desc')  params.missing_desc  = true
+      if (quickFilter === 'missing_price') params.missing_price = true
+      if (quickFilter === 'out_of_stock')  params.out_of_stock  = true
+      if (quickFilter === 'low_stock')     params.low_stock     = true
+      if (quickFilter === 'no_image')      params.no_image      = true
+      if (quickFilter === 'featured')      params.featured_only = true
       const data = await adminGetProducts(params)
       setProducts(data.products)
       setTotal(data.total)
       setTotalPages(data.total_pages)
     } catch {}
     finally { setLoading(false) }
-  }, [page, search, categoryFilter])
+  }, [page, search, categoryFilter, quickFilter, activeTab])
 
   useEffect(() => { load() }, [load])
 
@@ -363,8 +538,12 @@ export default function AdminProductsPage() {
   const handleSaved = () => {
     setShowForm(false)
     setEditProduct(null)
+    if (!editProduct) {
+      // New product → switch to staging tab so user can see it
+      setActiveTab('staged')
+    }
     load()
-    showToast(editProduct ? 'Product updated!' : 'Product added!')
+    showToast(editProduct ? 'Product updated!' : 'Product added to Staging!')
   }
 
   const handleDelete = async () => {
@@ -372,6 +551,27 @@ export default function AdminProductsPage() {
     setDeleteProduct(null)
     load()
     showToast('Product deleted')
+  }
+
+  const handlePublish = async (product) => {
+    try {
+      await adminPublishProduct(product.id)
+      load()
+      showToast(`"${product.name.slice(0, 30)}..." published to store!`)
+    } catch (err) {
+      const detail = err.response?.data?.detail
+      if (detail?.errors) {
+        setPublishError({ product, errors: detail.errors })
+      } else {
+        showToast(detail || 'Failed to publish', 'error')
+      }
+    }
+  }
+
+  const handleStage = async (product) => {
+    await adminStageProduct(product.id)
+    load()
+    showToast(`"${product.name.slice(0, 30)}..." moved to staging`)
   }
 
   const handleSearch = (e) => {
@@ -429,6 +629,10 @@ export default function AdminProductsPage() {
           <div className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium text-white border-b-2 border-rose-500">
             <Tag className="w-3.5 h-3.5" /> Products
           </div>
+          <Link to="/admin/banners"
+            className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium text-gray-500 hover:text-gray-300 transition-colors">
+            <Layout className="w-3.5 h-3.5" /> Banners
+          </Link>
         </div>
       </header>
 
@@ -438,10 +642,39 @@ export default function AdminProductsPage() {
           {/* Header bar */}
           <div className="p-5 border-b border-gray-800 space-y-4">
             <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-bold text-white">Products</h2>
-                <p className="text-xs text-gray-500 mt-0.5">{total.toLocaleString()} total products</p>
+              <div className="flex items-center gap-3">
+                {/* Tabs */}
+                <button
+                  onClick={() => { setActiveTab('active'); setPage(1) }}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                    activeTab === 'active'
+                      ? 'bg-white text-gray-900'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
+                >
+                  <Rocket className="w-3.5 h-3.5" />
+                  Live
+                  {activeTab === 'active' && <span className="ml-1 text-xs font-normal text-gray-500">{total.toLocaleString()}</span>}
+                </button>
+                <button
+                  onClick={() => { setActiveTab('staged'); setPage(1) }}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                    activeTab === 'staged'
+                      ? 'bg-amber-500 text-white'
+                      : 'text-gray-400 hover:text-amber-400 hover:bg-amber-500/10 border border-gray-700 hover:border-amber-500/30'
+                  }`}
+                >
+                  <SendToBack className="w-3.5 h-3.5" />
+                  Staging
+                  {activeTab === 'staged' && <span className="ml-1 text-xs font-normal text-amber-200">{total.toLocaleString()}</span>}
+                </button>
               </div>
+              <button
+                onClick={() => setShowExport(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 hover:border-gray-500 rounded-xl text-sm font-medium text-gray-300 hover:text-white transition-all"
+              >
+                <Download className="w-4 h-4" /> Export
+              </button>
               <button
                 onClick={() => { setEditProduct(null); setShowForm(true) }}
                 className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-rose-500 to-fuchsia-600 hover:from-rose-400 hover:to-fuchsia-500 rounded-xl text-sm font-semibold text-white transition-all shadow-lg shadow-rose-500/20"
@@ -452,6 +685,7 @@ export default function AdminProductsPage() {
 
             {/* Filters */}
             <div className="flex flex-col sm:flex-row gap-3">
+              {/* Search */}
               <form onSubmit={handleSearch} className="flex gap-2 flex-1">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
@@ -479,10 +713,83 @@ export default function AdminProductsPage() {
                   </button>
                 ))}
               </div>
+
+              {/* Quick-filter dropdown */}
+              {(() => {
+                const FILTER_OPTIONS = [
+                  { value: '',              label: 'No filter',           dot: 'bg-gray-500' },
+                  { value: 'missing_desc',  label: 'Missing Description', dot: 'bg-amber-400' },
+                  { value: 'missing_price', label: 'Missing Price',       dot: 'bg-red-400'   },
+                  { value: 'out_of_stock',  label: 'Out of Stock',        dot: 'bg-rose-500'  },
+                  { value: 'low_stock',     label: 'Low Stock (≤5)',      dot: 'bg-orange-400'},
+                  { value: 'no_image',      label: 'No Image',            dot: 'bg-violet-400'},
+                  { value: 'featured',      label: 'Featured Only',       dot: 'bg-emerald-400'},
+                ]
+                const active = FILTER_OPTIONS.find(o => o.value === quickFilter)
+                return (
+                  <div className="relative flex-shrink-0">
+                    <button
+                      onClick={() => setFilterOpen(v => !v)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium transition-all border ${
+                        quickFilter
+                          ? 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+                          : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-white hover:border-gray-600'
+                      }`}
+                    >
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      {quickFilter ? active?.label : 'Filter'}
+                      {quickFilter && (
+                        <span className="ml-1 text-gray-400">({total})</span>
+                      )}
+                      {quickFilter ? (
+                        <span
+                          className="ml-1 hover:text-white"
+                          onClick={e => { e.stopPropagation(); setQuickFilter(''); setPage(1); setFilterOpen(false) }}
+                        >✕</span>
+                      ) : (
+                        <ChevronDown className={`w-3 h-3 transition-transform ${filterOpen ? 'rotate-180' : ''}`} />
+                      )}
+                    </button>
+
+                    {filterOpen && (
+                      <>
+                        <div className="fixed inset-0 z-10" onClick={() => setFilterOpen(false)} />
+                        <div className="absolute right-0 top-full mt-1.5 z-20 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl py-1.5 min-w-[200px]">
+                          {FILTER_OPTIONS.map(opt => (
+                            <button
+                              key={opt.value}
+                              onClick={() => { setQuickFilter(opt.value); setPage(1); setFilterOpen(false) }}
+                              className={`w-full text-left px-4 py-2.5 text-xs flex items-center gap-2.5 transition-colors ${
+                                quickFilter === opt.value
+                                  ? 'text-white font-semibold bg-gray-700/50'
+                                  : 'text-gray-400 hover:text-white hover:bg-gray-700/30'
+                              }`}
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${opt.dot}`} />
+                              {opt.label}
+                              {quickFilter === opt.value && <Check className="w-3 h-3 ml-auto text-rose-400" />}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )
+              })()}
             </div>
           </div>
 
           {/* Table */}
+          {/* Staging info banner */}
+          {activeTab === 'staged' && (
+            <div className="mx-5 mt-4 px-4 py-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3">
+              <SendToBack className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-300 leading-relaxed">
+                These products are <strong>hidden from the store</strong>. To publish, a product must have: name, price &gt; 0, description, and at least one image. Click <strong>Edit</strong> to fill in missing fields, then <strong>Publish</strong>.
+              </p>
+            </div>
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -522,6 +829,7 @@ export default function AdminProductsPage() {
                         <div className="min-w-0">
                           <p className="text-xs font-medium text-white line-clamp-2 leading-tight">{p.name}</p>
                           {p.brand && <p className="text-xs text-gray-500 mt-0.5">{p.brand}</p>}
+                          {!p.description && <span className="text-[10px] text-amber-400 font-medium">No description</span>}
                         </div>
                       </div>
                     </td>
@@ -531,7 +839,10 @@ export default function AdminProductsPage() {
                     </td>
                     {/* Price */}
                     <td className="px-5 py-3">
-                      <p className="text-xs font-semibold text-white">KD {Number(p.price).toFixed(3)}</p>
+                      {(!p.price || p.price === 0)
+                        ? <span className="text-xs font-medium text-red-400">No price</span>
+                        : <p className="text-xs font-semibold text-white">KD {Number(p.price).toFixed(3)}</p>
+                      }
                       {p.original_price && (
                         <p className="text-xs text-gray-600 line-through">KD {Number(p.original_price).toFixed(3)}</p>
                       )}
@@ -551,6 +862,21 @@ export default function AdminProductsPage() {
                         >
                           <Edit2 className="w-3 h-3" /> Edit
                         </button>
+                        {activeTab === 'staged' ? (
+                          <button
+                            onClick={() => handlePublish(p)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-400 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all font-semibold"
+                          >
+                            <Rocket className="w-3 h-3" /> Publish
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleStage(p)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-xs text-gray-400 hover:text-amber-400 hover:border-amber-500/30 transition-all"
+                          >
+                            <SendToBack className="w-3 h-3" /> Stage
+                          </button>
+                        )}
                         <button
                           onClick={() => setDeleteProduct(p)}
                           className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-xs text-gray-400 hover:text-red-400 hover:border-red-500/30 transition-all"
@@ -587,6 +913,9 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
+      {/* Export modal */}
+      {showExport && <ExportModal onClose={() => setShowExport(false)} />}
+
       {/* Form slide-over */}
       {showForm && (
         <ProductForm
@@ -603,6 +932,38 @@ export default function AdminProductsPage() {
           onConfirm={handleDelete}
           onCancel={() => setDeleteProduct(null)}
         />
+      )}
+
+      {/* Publish validation error modal */}
+      {publishError && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4" onClick={() => setPublishError(null)}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div className="relative bg-gray-900 border border-gray-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="w-12 h-12 rounded-full bg-amber-500/15 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-5 h-5 text-amber-400" />
+            </div>
+            <p className="text-base font-bold text-white text-center mb-1">Cannot Publish</p>
+            <p className="text-xs text-gray-400 text-center mb-4 line-clamp-1">{publishError.product.name}</p>
+            <div className="space-y-2 mb-5">
+              {publishError.errors.map((e, i) => (
+                <div key={i} className="flex items-center gap-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400">
+                  <X className="w-3.5 h-3.5 flex-shrink-0" /> {e}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 text-center mb-4">Edit the product to fill in the missing fields, then try publishing again.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setPublishError(null)}
+                className="flex-1 px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-gray-300 hover:text-white">
+                Close
+              </button>
+              <button onClick={() => { setEditProduct(publishError.product); setShowForm(true); setPublishError(null) }}
+                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-rose-500 to-fuchsia-600 rounded-xl text-sm font-semibold text-white">
+                <Edit2 className="w-3.5 h-3.5 inline mr-1.5" />Edit Product
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

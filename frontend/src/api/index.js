@@ -16,4 +16,7 @@ export const createOrder = (orderData) => api.post('/orders/', orderData).then(r
 export const getOrder = (orderNumber) => api.get(`/orders/${orderNumber}`).then(r => r.data)
 export const searchOrders = (params) => api.get('/orders/', { params }).then(r => r.data)
 
+export const getBanner = (location) =>
+  api.get(`/banners/${location}`).then(r => r.data?.data ?? null).catch(() => null)
+
 export default api

@@ -9,8 +9,10 @@ from datetime import datetime, timedelta
 from typing import Optional, List
 from pathlib import Path
 from urllib.parse import quote
-from fastapi import APIRouter, Depends, HTTPException, Header, UploadFile, File, Form
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException, Header, UploadFile, File, Form, Request
+import csv
+import io
+from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, and_, or_
 from database import get_db
@@ -20,14 +22,17 @@ import schemas
 STATIC_BASE = Path(__file__).parent.parent / "static"
 STATIC_BASE.mkdir(parents=True, exist_ok=True)
 
+BANNER_DIR = STATIC_BASE / "banners"
+BANNER_DIR.mkdir(parents=True, exist_ok=True)
+
 ALLOWED_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 
 CATEGORY_FOLDERS = {
-    1: "livish_body_care_images",
-    2: "livish_hair_care_images",
-    3: "livish_makeup_images",
-    4: "livish_personal_care_images",
-    5: "livish_perfume_images",
+    1: "zosouq_body_care_images",
+    2: "zosouq_hair_care_images",
+    3: "zosouq_makeup_images",
+    4: "zosouq_personal_care_images",
+    5: "zosouq_perfume_images",
 }
 
 
@@ -309,35 +314,150 @@ def get_me(admin=Depends(get_admin)):
 
 # ── Product Management ────────────────────────────────────
 
+def _product_out(p):
+    return {
+        "id": p.id, "name": p.name, "slug": p.slug,
+        "price": p.price, "original_price": p.original_price,
+        "stock": p.stock, "category_id": p.category_id,
+        "image_url": p.image_url, "images": p.images,
+        "description": p.description or "",
+        "brand": p.brand or "", "is_active": p.is_active,
+        "is_featured": p.is_featured, "is_staged": p.is_staged or False,
+    }
+
+
+_SITE = "https://www.zosouq.com"
+_CAT_NAMES = {1: "Body Care", 2: "Hair Care", 3: "Makeup", 4: "Personal Care", 5: "Perfumes"}
+_FB_HEADERS = [
+    "id", "image_link", "description", "title", "price", "link",
+    "availability", "condition",
+    "custom_label_0", "custom_label_1", "custom_label_2", "custom_label_3", "custom_label_4",
+    "custom_number_0", "custom_number_1", "custom_number_2", "custom_number_3", "custom_number_4",
+    "sale_price", "sale_price_effective_date", "video[0].url", "video[0].tag[0]",
+]
+
+
+@router.get("/products/export")
+def export_products_tsv(
+    category_id: Optional[int] = None,
+    missing_desc: Optional[bool] = None,
+    missing_price: Optional[bool] = None,
+    out_of_stock: Optional[bool] = None,
+    low_stock: Optional[bool] = None,
+    no_image: Optional[bool] = None,
+    featured_only: Optional[bool] = None,
+    staged: Optional[bool] = False,
+    admin=Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    q = db.query(models.Product).filter(
+        models.Product.is_active == True,
+        models.Product.is_staged == staged,
+    )
+    if category_id:
+        q = q.filter(models.Product.category_id == category_id)
+    if missing_desc:
+        q = q.filter((models.Product.description == None) | (models.Product.description == ""))
+    if missing_price:
+        q = q.filter((models.Product.price == None) | (models.Product.price == 0))
+    if out_of_stock:
+        q = q.filter(models.Product.stock == 0)
+    if low_stock:
+        q = q.filter(models.Product.stock > 0, models.Product.stock <= 5)
+    if no_image:
+        q = q.filter((models.Product.image_url == None) | (models.Product.image_url == ""))
+    if featured_only:
+        q = q.filter(models.Product.is_featured == True)
+
+    products = q.order_by(models.Product.id).all()
+
+    buf = io.StringIO()
+    w = csv.writer(buf, delimiter="\t", quoting=csv.QUOTE_MINIMAL)
+    w.writerow(_FB_HEADERS)
+
+    for p in products:
+        name  = (p.name or "").strip()
+        brand = (p.brand or "").strip()
+        cat   = _CAT_NAMES.get(p.category_id, "")
+        price = float(p.price or 0)
+        orig  = float(p.original_price) if p.original_price else None
+        img   = p.image_url or ""
+        desc  = (p.description or "").strip()
+
+        image_link   = f"{_SITE}{img}" if img.startswith("/") else img
+        description  = desc[:9999] if desc else " | ".join(filter(None, [name, brand and f"by {brand}", cat and f"| {cat}"]))[:9999]
+        availability = "in stock" if (p.stock or 0) > 0 else "out of stock"
+
+        if orig and orig > price:
+            fb_price = f"{orig:.3f} KWD"
+            fb_sale  = f"{price:.3f} KWD"
+        else:
+            fb_price = f"{price:.3f} KWD"
+            fb_sale  = ""
+
+        w.writerow([
+            p.id, image_link, description, name[:200], fb_price, f"{_SITE}/product/{p.slug}",
+            availability, "new",
+            brand, cat, "", "", "",
+            "", "", "", "", "",
+            fb_sale, "", "", "",
+        ])
+
+    buf.seek(0)
+    filename = "zosouq_catalog.tsv"
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/tab-separated-values",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 @router.get("/products")
 def admin_list_products(
     page: int = 1,
     per_page: int = 20,
     category_id: Optional[int] = None,
     search: Optional[str] = None,
+    missing_desc: Optional[bool] = None,
+    missing_price: Optional[bool] = None,
+    out_of_stock: Optional[bool] = None,
+    low_stock: Optional[bool] = None,
+    no_image: Optional[bool] = None,
+    featured_only: Optional[bool] = None,
+    staged: Optional[bool] = False,
     admin=Depends(get_admin),
     db: Session = Depends(get_db),
 ):
-    q = db.query(models.Product)
+    q = db.query(models.Product).filter(models.Product.is_staged == staged)
     if category_id:
         q = q.filter(models.Product.category_id == category_id)
     if search:
         q = q.filter(models.Product.name.ilike(f"%{search}%"))
+    if missing_desc:
+        q = q.filter(
+            (models.Product.description == None) |
+            (models.Product.description == '')
+        )
+    if missing_price:
+        q = q.filter(
+            (models.Product.price == None) |
+            (models.Product.price == 0)
+        )
+    if out_of_stock:
+        q = q.filter(models.Product.stock == 0)
+    if low_stock:
+        q = q.filter(models.Product.stock > 0, models.Product.stock <= 5)
+    if no_image:
+        q = q.filter(
+            (models.Product.image_url == None) |
+            (models.Product.image_url == '')
+        )
+    if featured_only:
+        q = q.filter(models.Product.is_featured == True)
     total = q.count()
     products = q.order_by(models.Product.id.desc()).offset((page - 1) * per_page).limit(per_page).all()
     return {
-        "products": [
-            {
-                "id": p.id, "name": p.name, "slug": p.slug,
-                "price": p.price, "original_price": p.original_price,
-                "stock": p.stock, "category_id": p.category_id,
-                "image_url": p.image_url, "images": p.images,
-                "description": p.description or "",
-                "brand": p.brand or "", "is_active": p.is_active,
-                "is_featured": p.is_featured,
-            }
-            for p in products
-        ],
+        "products": [_product_out(p) for p in products],
         "total": total,
         "page": page,
         "per_page": per_page,
@@ -366,6 +486,7 @@ async def admin_create_product(
         stock=stock, category_id=category_id,
         brand=brand or None, is_active=True, is_featured=is_featured,
         rating=0.0, review_count=0,
+        is_staged=True,  # new products always start in staging
     )
     db.add(product)
     db.flush()
@@ -440,10 +561,114 @@ def admin_delete_product(
     return {"deleted": product_id}
 
 
+@router.put("/products/{product_id}/publish")
+def admin_publish_product(
+    product_id: int,
+    admin=Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    # ── Validation: all required fields must be present ──
+    errors = []
+    if not product.name or not product.name.strip():
+        errors.append("Product name is missing")
+    if not product.price or product.price <= 0:
+        errors.append("Price must be greater than 0")
+    if not product.description or not product.description.strip():
+        errors.append("Description is missing")
+    if not product.image_url:
+        errors.append("At least one image is required")
+    if errors:
+        raise HTTPException(
+            status_code=422,
+            detail={"errors": errors}
+        )
+
+    # Fix slug if it has URL-unsafe chars
+    import re as _re
+    from urllib.parse import unquote as _unquote
+    if _re.search(r'[^a-z0-9\-]', product.slug):
+        clean = _re.sub(r'[^a-z0-9\-]+', '-', _unquote(product.slug).lower())
+        clean = _re.sub(r'-+', '-', clean).strip('-')
+        base, n = clean, 1
+        while db.query(models.Product).filter(
+            models.Product.slug == clean,
+            models.Product.id != product_id
+        ).first():
+            clean = f"{base}-{n}"; n += 1
+        product.slug = clean
+
+    product.is_staged = False
+    product.is_active = True
+    db.commit()
+    return _product_out(product)
+
+
+@router.put("/products/{product_id}/stage")
+def admin_stage_product(
+    product_id: int,
+    admin=Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    product.is_staged = True
+    db.commit()
+    return _product_out(product)
+
+
+# ── Banner Management ─────────────────────────────────────
+
+@router.get("/banners")
+def admin_list_banners(admin=Depends(get_admin), db: Session = Depends(get_db)):
+    banners = db.query(models.Banner).all()
+    return [{"location": b.location, "data": json.loads(b.data), "updated_at": str(b.updated_at)} for b in banners]
+
+
+@router.put("/banners/{location}")
+async def admin_update_banner(
+    location: str,
+    request: Request,
+    admin=Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    body = await request.json()
+    banner = db.query(models.Banner).filter(models.Banner.location == location).first()
+    if banner:
+        banner.data = json.dumps(body)
+        banner.updated_at = datetime.utcnow()
+    else:
+        banner = models.Banner(location=location, data=json.dumps(body))
+        db.add(banner)
+    db.commit()
+    return {"location": location, "updated": True}
+
+
+@router.post("/banners/{location}/upload-image")
+async def admin_upload_banner_image(
+    location: str,
+    image: UploadFile = File(...),
+    admin=Depends(get_admin),
+):
+    ext = Path(image.filename).suffix.lower()
+    if ext not in ALLOWED_EXTS:
+        raise HTTPException(status_code=400, detail="Invalid file type")
+    safe_loc = re.sub(r"[^a-z0-9_\-]", "_", location)
+    filename = f"{safe_loc}_{int(time.time())}{ext}"
+    dest = BANNER_DIR / filename
+    content = image.file.read()
+    dest.write_bytes(content)
+    return {"url": f"/static/banners/{filename}"}
+
+
 def _save_images(product_id: int, product_name: str, category_id: int, uploads: List[UploadFile]) -> List[str]:
     if not uploads or all(u.filename == "" for u in uploads):
         return []
-    cat_folder = CATEGORY_FOLDERS.get(category_id, "livish_body_care_images")
+    cat_folder = CATEGORY_FOLDERS.get(category_id, "zosouq_body_care_images")
     safe_name = re.sub(r'[<>:"/\\|?*]', '', product_name.strip())[:100]
     folder = STATIC_BASE / cat_folder / safe_name
     folder.mkdir(parents=True, exist_ok=True)

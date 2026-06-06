@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
+import { useLanguage } from '../context/LanguageContext'
 import { useParams, Link } from 'react-router-dom'
 import { ShoppingCart, Star, ChevronLeft, Package, Truck, Shield, Minus, Plus, CheckCircle, ChevronRight, Heart, Share2, Sparkles } from 'lucide-react'
 import { getProduct, getProducts } from '../api'
@@ -76,6 +77,7 @@ export default function ProductPage() {
   const { dispatch } = useCart()
   const { dispatch: wishlistDispatch, isWishlisted } = useWishlist()
   const addToast = useToast()
+  const { t } = useLanguage()
 
   useEffect(() => {
     setLoading(true)
@@ -96,7 +98,7 @@ export default function ProductPage() {
       dispatch({ type: 'ADD_ITEM', payload: product })
     }
     setAdded(true)
-    addToast(`${product.name} added to cart`)
+    addToast(`${product.name} — ${t('added_to_cart')}`)
     setTimeout(() => setAdded(false), 2500)
   }
 
@@ -358,13 +360,13 @@ export default function ProductPage() {
                   <>
                     <div className="w-2 h-2 rounded-full bg-emerald-500" />
                     <span className="text-xs font-medium text-emerald-600">
-                      {product.stock > 10 ? 'In Stock' : `Only ${product.stock} left`}
+                      {product.stock > 10 ? t('in_stock') : t('low_stock', { n: product.stock })}
                     </span>
                   </>
                 ) : (
                   <>
                     <div className="w-2 h-2 rounded-full bg-red-500" />
-                    <span className="text-xs font-medium text-red-500">Out of Stock</span>
+                    <span className="text-xs font-medium text-red-500">{t('out_of_stock')}</span>
                   </>
                 )}
               </div>
@@ -405,7 +407,7 @@ export default function ProductPage() {
                       {added ? (
                         <><CheckCircle className="w-5 h-5" /> Added!</>
                       ) : (
-                        <><ShoppingCart className="w-5 h-5" /> Add to Cart</>
+                        <><ShoppingCart className="w-5 h-5" /> {t('add_to_cart')}</>
                       )}
                     </button>
                   </div>
@@ -413,7 +415,7 @@ export default function ProductPage() {
                   {/* Buy now link */}
                   <Link to="/cart"
                     className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-gray-900 text-gray-900 text-sm font-semibold hover:bg-gray-900 hover:text-white transition-all duration-300">
-                    Buy Now
+                    {t('buy_now')}
                   </Link>
                 </div>
               )}
@@ -457,7 +459,7 @@ export default function ProductPage() {
             <div className="flex items-center justify-between mb-5 sm:mb-6">
               <div>
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>
-                  You May Also Like
+                  {t('you_may_like')}
                 </h2>
                 <p className="text-xs text-gray-400 mt-0.5">More from {product.category?.name || 'this collection'}</p>
               </div>

@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom'
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag, Shield, Sparkles, Truck } from 'lucide-react'
 import { useCart, useToast } from '../context/CartContext'
+import { useLanguage } from '../context/LanguageContext'
 import { formatPrice, calcShipping, FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from '../utils/format'
 import SEO from '../components/SEO'
 
 export default function CartPage() {
   const { items, dispatch, totalPrice } = useCart()
   const addToast = useToast()
+  const { t } = useLanguage()
 
   const handleRemove = (item) => {
     dispatch({ type: 'REMOVE_ITEM', payload: item.id })
@@ -21,6 +23,7 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50/50">
+        <SEO title="Your Cart" noIndex={true} path="/cart" />
         <section className="pt-4 sm:pt-6 pb-2">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
             <nav className="flex items-center gap-2 text-sm text-gray-400 mb-3 sm:mb-4">
@@ -36,14 +39,14 @@ export default function CartPage() {
                     <ShoppingBag className="w-9 h-9 sm:w-11 sm:h-11 text-emerald-500" />
                   </div>
                   <h1 className="text-xl sm:text-3xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'Georgia, serif' }}>
-                    Your Cart is Empty
+                    {t('cart_empty')}
                   </h1>
                   <p className="text-gray-500 text-xs sm:text-sm mb-5 sm:mb-6 max-w-sm mx-auto">
-                    Looks like you have not added anything yet. Start exploring our products!
+                    {t('cart_empty_sub')}
                   </p>
                   <Link to="/"
                     className="inline-flex items-center gap-2 bg-gray-900 text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold hover:bg-gray-800 transition-all shadow-lg hover:gap-3 active:scale-95">
-                    <Sparkles className="w-4 h-4" /> Start Shopping
+                    <Sparkles className="w-4 h-4" /> {t('start_shopping')}
                   </Link>
                 </div>
               </div>
@@ -61,7 +64,7 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-gray-50/50">
-      <SEO title="Your Cart" noIndex={true} />
+      <SEO title="Your Cart" noIndex={true} path="/cart" />
 
       {/* ═══ BREADCRUMB ═══ */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 pt-4 sm:pt-6">
@@ -74,7 +77,7 @@ export default function CartPage() {
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-4 sm:py-6">
         <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-5" style={{ fontFamily: 'Georgia, serif' }}>
-          Shopping Cart <span className="text-gray-400 font-normal text-base">({totalQty} item{totalQty !== 1 ? 's' : ''})</span>
+          {t('your_cart')} <span className="text-gray-400 font-normal text-base">({totalQty} {totalQty !== 1 ? t('items') : t('item')})</span>
         </h1>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -157,50 +160,48 @@ export default function CartPage() {
 
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Subtotal ({totalQty} items)</span>
+                  <span className="text-gray-500">{t('subtotal')} ({totalQty} {t('items')})</span>
                   <span className="font-medium text-gray-900">{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500 flex items-center gap-1">
-                    <Tag className="w-3.5 h-3.5" /> Shipping
+                    <Tag className="w-3.5 h-3.5" /> {t('shipping')}
                   </span>
                   {shipping === 0
-                    ? <span className="font-semibold text-emerald-600">FREE</span>
+                    ? <span className="font-semibold text-emerald-600">{t('free')}</span>
                     : <span className="font-semibold text-gray-900">{formatPrice(SHIPPING_FEE)}</span>
                   }
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Payment</span>
-                  <span className="font-medium text-gray-700">Cash on Delivery</span>
+                  <span className="text-gray-500">{t('cash_on_delivery')}</span>
+                  <span className="font-medium text-gray-700">✓</span>
                 </div>
               </div>
 
-              {/* Free-shipping nudge */}
               {amountToFreeShipping > 0 && (
                 <div className="mb-4 px-3 py-2.5 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-2">
                   <Truck className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
                   <p className="text-xs text-amber-800 leading-snug">
-                    Add <span className="font-bold">{formatPrice(amountToFreeShipping)}</span> more to get <span className="font-bold text-emerald-700">FREE shipping</span>!
+                    Add <span className="font-bold">{formatPrice(amountToFreeShipping)}</span> more for <span className="font-bold text-emerald-700">{t('free')} {t('shipping')}</span>!
                   </p>
                 </div>
               )}
 
               <div className="border-t border-gray-100 pt-4 mb-5">
                 <div className="flex justify-between items-baseline">
-                  <span className="font-bold text-gray-900">Total</span>
+                  <span className="font-bold text-gray-900">{t('total')}</span>
                   <span className="text-xl sm:text-2xl font-extrabold text-gray-900">{formatPrice(subtotal + shipping)}</span>
                 </div>
-                <p className="text-[10px] text-gray-400 mt-0.5">Inclusive of all taxes</p>
               </div>
 
               <Link to="/checkout"
                 className="flex items-center justify-center gap-2 w-full py-3 sm:py-3.5 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-all shadow-lg shadow-gray-300 active:scale-[0.97]">
-                Proceed to Checkout <ArrowRight className="w-4 h-4" />
+                {t('proceed_checkout')} <ArrowRight className="w-4 h-4" />
               </Link>
 
               <Link to="/"
                 className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-gray-200 text-gray-700 text-sm font-semibold hover:border-gray-900 hover:text-gray-900 transition-all mt-3">
-                Continue Shopping
+                {t('start_shopping')}
               </Link>
 
               {/* Trust info */}

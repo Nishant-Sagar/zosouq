@@ -3,12 +3,14 @@ import { Link } from 'react-router-dom'
 import { ShoppingCart, Heart } from 'lucide-react'
 import { useCart, useToast } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
+import { useLanguage } from '../context/LanguageContext'
 import { formatPrice } from '../utils/format'
 
 function ProductCard({ product, compact, accentColor }) {
   const { dispatch } = useCart()
   const { dispatch: wishlistDispatch, isWishlisted } = useWishlist()
   const addToast = useToast()
+  const { t } = useLanguage()
   const accent = accentColor || '#ec4899'
   const wishlisted = isWishlisted(product.id)
 
@@ -20,7 +22,7 @@ function ProductCard({ product, compact, accentColor }) {
     e.preventDefault()
     e.stopPropagation()
     dispatch({ type: 'ADD_ITEM', payload: product })
-    addToast(`${product.name} added to cart`)
+    addToast(`${product.name} — ${t('added_to_cart')}`)
   }
 
   return (
@@ -74,7 +76,7 @@ function ProductCard({ product, compact, accentColor }) {
           <button onClick={handleAddToCart} disabled={product.stock === 0}
             className="absolute bottom-2.5 left-2.5 right-2.5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 opacity-0 translate-y-3 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 text-white disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
             style={{ background: `linear-gradient(135deg, ${accent}, ${accent}dd)` }}>
-            <ShoppingCart className="w-3.5 h-3.5" /> Add to Cart
+            <ShoppingCart className="w-3.5 h-3.5" /> {t('add_to_cart')}
           </button>
         </div>
 

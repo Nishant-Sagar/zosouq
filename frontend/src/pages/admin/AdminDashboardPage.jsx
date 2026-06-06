@@ -336,6 +336,10 @@ export default function AdminDashboardPage() {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all">
               <Tag className="w-3.5 h-3.5" /> Products
             </Link>
+            <Link to="/admin/banners"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+              <TrendingUp className="w-3.5 h-3.5" /> Banners
+            </Link>
           </nav>
           <div className="flex items-center gap-3">
             <button onClick={() => { loadStats(); loadOrders() }}

@@ -22,7 +22,7 @@ export default function MobileBottomNav() {
   }
 
   return (
-    <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 mobile-bottom-nav">
+    <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 mobile-bottom-nav" style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}>
       <div className="flex items-center justify-around h-16 px-2">
         {NAV_ITEMS.map(({ to, icon: Icon, label, showBadge, showWishlistBadge }) => {
           const active = isActive(to)

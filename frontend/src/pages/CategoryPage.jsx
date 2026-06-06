@@ -1,9 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { SlidersHorizontal, ChevronDown, X, Sparkles, ArrowRight, Star } from 'lucide-react'
-import { getCategory, getProducts, getProductCount } from '../api'
+import { getCategory, getProducts, getProductCount, getBanner } from '../api'
 import ProductCard from '../components/ProductCard'
-import Pagination from '../components/Pagination'
 import SEO from '../components/SEO'
 
 /* ── Category visual themes ── */
@@ -142,8 +141,6 @@ function PromoBanner({ promo }) {
   )
 }
 
-const PER_PAGE = 40
-
 export default function CategoryPage() {
   const { slug } = useParams()
   const [category, setCategory] = useState(null)
@@ -154,63 +151,63 @@ export default function CategoryPage() {
   const [maxPrice, setMaxPrice] = useState('')
   const [filterOpen, setFilterOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
-  const [page, setPage] = useState(1)
+  const [customPromos, setCustomPromos] = useState(null)
 
   const theme = CATEGORY_THEMES[slug] || DEFAULT_THEME
 
   useEffect(() => {
-    setPage(1)
     setSort('')
     setMaxPrice('')
+    setCustomPromos(null)
+    const slugKey = slug.replace(/-/g, '_')
+    Promise.allSettled([
+      getBanner(`category_promo_${slugKey}_1`),
+      getBanner(`category_promo_${slugKey}_2`),
+    ]).then(([p1, p2]) => {
+      if (p1.value || p2.value) {
+        const themePromos = (CATEGORY_THEMES[slug] || DEFAULT_THEME).promos || []
+        const merged = themePromos.map((def, i) => {
+          const val = [p1.value, p2.value][i]
+          return val ? { ...def, ...val } : def
+        })
+        setCustomPromos(merged)
+      }
+    })
   }, [slug])
 
   useEffect(() => {
     setLoading(true)
     window.scrollTo(0, 0)
-    const params = { category_slug: slug, limit: PER_PAGE, skip: (page - 1) * PER_PAGE }
+    const params = { category_slug: slug, limit: 2000 }
     if (maxPrice) params.max_price = parseFloat(maxPrice)
     if (sort === 'price_asc') params.sort = 'price_asc'
     else if (sort === 'price_desc') params.sort = 'price_desc'
 
-    const countParams = { category_slug: slug }
-    if (maxPrice) countParams.max_price = parseFloat(maxPrice)
-
     Promise.all([
-      page === 1 ? getCategory(slug) : Promise.resolve(category),
+      getCategory(slug),
       getProducts(params),
-      getProductCount(countParams),
-    ]).then(([cat, prods, count]) => {
+    ]).then(([cat, prods]) => {
       if (cat) setCategory(cat)
       let sorted = [...prods]
       if (sort === 'rating') sorted.sort((a, b) => b.rating - a.rating)
       setProducts(sorted)
-      setTotal(count)
+      setTotal(sorted.length)
     }).catch(() => {}).finally(() => setLoading(false))
-  }, [slug, page, sort, maxPrice])
+  }, [slug, sort, maxPrice])
 
-  const handleFilterApply = (newMaxPrice) => {
-    setMaxPrice(newMaxPrice)
-    setPage(1)
-  }
+  const handleFilterApply = (newMaxPrice) => setMaxPrice(newMaxPrice)
 
   const handleSort = (value) => {
     setSort(value)
-    setPage(1)
     setSortOpen(false)
   }
 
-  const handlePageChange = (newPage) => {
-    setPage(newPage)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  const totalPages = Math.ceil(total / PER_PAGE)
   const filtered = products
 
   /* Insert promo banners at specific positions in the product grid */
   const renderProductGrid = () => {
     const items = []
-    const promos = theme.promos || []
+    const promos = customPromos ?? (theme.promos || [])
     let promoIndex = 0
     const promoPositions = [8, 20]
 
@@ -233,9 +230,9 @@ export default function CategoryPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://zosouq.com/' },
-      { '@type': 'ListItem', position: 2, name: 'Categories', item: 'https://zosouq.com/categories' },
-      { '@type': 'ListItem', position: 3, name: catName, item: `https://zosouq.com/category/${slug}` },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.zosouq.com/' },
+      { '@type': 'ListItem', position: 2, name: 'Categories', item: 'https://www.zosouq.com/categories' },
+      { '@type': 'ListItem', position: 3, name: catName, item: `https://www.zosouq.com/category/${slug}` },
     ],
   }
 
@@ -440,12 +437,6 @@ export default function CategoryPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
               {renderProductGrid()}
             </div>
-            <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
-            {totalPages > 1 && (
-              <p className="text-center text-xs text-gray-400 mt-3">
-                Page {page} of {totalPages} · {displayCount} products
-              </p>
-            )}
           </>
         )}
 

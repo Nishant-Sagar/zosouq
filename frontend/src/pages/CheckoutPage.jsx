@@ -288,7 +288,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-gray-50/50 pb-6">
-      <SEO title="Checkout" noIndex={true} />
+      <SEO title="Checkout" noIndex={true} path="/checkout" />
 
       {/* ═══ BREADCRUMB ═══ */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 pt-4 sm:pt-6">

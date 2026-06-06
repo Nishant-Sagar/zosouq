@@ -1,10 +1,17 @@
-import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { lazy, Suspense, useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { CartProvider, ToastProvider } from './context/CartContext'
 import { WishlistProvider } from './context/WishlistContext'
+import { LanguageProvider } from './context/LanguageContext'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import MobileBottomNav from './components/MobileBottomNav'
+
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+  return null
+}
 
 // Store pages
 const HomePage             = lazy(() => import('./pages/HomePage'))
@@ -23,6 +30,7 @@ const NotFoundPage         = lazy(() => import('./pages/NotFoundPage'))
 const AdminLoginPage     = lazy(() => import('./pages/admin/AdminLoginPage'))
 const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'))
 const AdminProductsPage  = lazy(() => import('./pages/admin/AdminProductsPage'))
+const AdminBannersPage   = lazy(() => import('./pages/admin/AdminBannersPage'))
 
 function PageLoader() {
   return (
@@ -38,6 +46,14 @@ function AdminLoader() {
       <div className="w-8 h-8 border-2 border-gray-800 border-t-gray-400 rounded-full animate-spin" />
     </div>
   )
+}
+
+// Synchronous guard — redirects before any content renders
+function RequireAuth({ children }) {
+  if (!localStorage.getItem('admin_token')) {
+    return <Navigate to="/admin/login" replace />
+  }
+  return children
 }
 
 function StoreLayout() {
@@ -70,6 +86,8 @@ function StoreLayout() {
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
+      <LanguageProvider>
       <ToastProvider>
         <CartProvider>
           <WishlistProvider>
@@ -81,20 +99,27 @@ export default function App() {
                 </Suspense>
               } />
               <Route path="/admin/dashboard" element={
-                <Suspense fallback={<AdminLoader />}>
-                  <AdminDashboardPage />
-                </Suspense>
+                <RequireAuth>
+                  <Suspense fallback={<AdminLoader />}>
+                    <AdminDashboardPage />
+                  </Suspense>
+                </RequireAuth>
               } />
               <Route path="/admin/products" element={
-                <Suspense fallback={<AdminLoader />}>
-                  <AdminProductsPage />
-                </Suspense>
+                <RequireAuth>
+                  <Suspense fallback={<AdminLoader />}>
+                    <AdminProductsPage />
+                  </Suspense>
+                </RequireAuth>
               } />
-              <Route path="/admin" element={
-                <Suspense fallback={<AdminLoader />}>
-                  <AdminLoginPage />
-                </Suspense>
+              <Route path="/admin/banners" element={
+                <RequireAuth>
+                  <Suspense fallback={<AdminLoader />}>
+                    <AdminBannersPage />
+                  </Suspense>
+                </RequireAuth>
               } />
+              <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
 
               {/* Store routes */}
               <Route path="/*" element={<StoreLayout />} />
@@ -102,6 +127,7 @@ export default function App() {
           </WishlistProvider>
         </CartProvider>
       </ToastProvider>
+      </LanguageProvider>
     </BrowserRouter>
   )
 }

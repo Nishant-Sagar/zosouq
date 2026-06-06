@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { ShoppingCart, Search, Menu, X, Heart, LayoutGrid, Package } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
+import { useLanguage } from '../context/LanguageContext'
 import { getCategories } from '../api'
 
 const CAT_COLORS = {
@@ -38,8 +39,9 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+  const { lang, setLang, t } = useLanguage()
 
-  useEffect(() => { getCategories().then(setCategories).catch(() => {}) }, [])
+  useEffect(() => { getCategories().then(d => setCategories(Array.isArray(d) ? d : [])).catch(() => {}) }, [])
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 2)
     window.addEventListener('scroll', fn, { passive: true })
@@ -73,30 +75,23 @@ export default function Navbar() {
             </button>
 
             {/* Logo */}
-            <Link to="/" className="flex-shrink-0 flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 via-fuchsia-500 to-violet-600 shadow-lg shadow-pink-300/50 flex items-center justify-center flex-shrink-0">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M3.5 4H16.5L3.5 16H16.5" stroke="white" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <span className="text-xl sm:text-2xl font-bold italic tracking-wide"
-                style={{
-                  fontFamily: 'Georgia, serif',
-                  background: 'linear-gradient(135deg, #f43f5e 0%, #c026d3 50%, #7c3aed 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}>
-                Zosouq
-              </span>
+            <Link to="/" className="flex-shrink-0">
+              <img
+                src="/logo.png"
+                srcSet="/logo.png 1x, /logo@2x.png 2x"
+                alt="Zosouq"
+                className="h-9 sm:h-10 w-auto object-contain"
+                loading="eager"
+                decoding="async"
+              />
             </Link>
 
             {/* Desktop search bar */}
             <form onSubmit={handleSearch} className="hidden sm:flex flex-1 max-w-lg mx-auto">
               <div className="relative w-full">
-                <input type="text" placeholder="Search for products..."
+                <input type="text" placeholder={t('search_placeholder')}
                   value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full pl-4 pr-10 py-2.5 text-sm rounded-xl bg-gray-100 border border-gray-200 focus:outline-none focus:border-pink-400 focus:bg-white focus:ring-2 focus:ring-pink-100 transition-all" />
+                  className="w-full pl-4 pr-10 py-2.5 text-sm rounded-xl bg-gray-100 border border-gray-200 focus:outline-none focus:border-pink-400 focus:bg-white focus:ring-2 focus:ring-pink-100 transition-all" style={{ fontSize: '16px' }} />
                 <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pink-600 transition-colors">
                   <Search className="w-4 h-4" />
                 </button>
@@ -105,6 +100,15 @@ export default function Navbar() {
 
             {/* Right icons */}
             <div className="flex items-center gap-1 sm:gap-2 ml-auto">
+              {/* Language toggle */}
+              <button
+                onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
+                className="px-2.5 py-1 rounded-lg text-xs font-bold border border-gray-200 text-gray-600 hover:border-pink-400 hover:text-pink-600 transition-all"
+                title={lang === 'en' ? 'Switch to Arabic' : 'التبديل للإنجليزية'}
+              >
+                {lang === 'en' ? 'ع' : 'EN'}
+              </button>
+
               {/* My Orders */}
               <Link to="/my-orders" className="relative p-2 text-gray-700 hover:text-purple-600 transition-colors group hidden sm:block">
                 <Package className={`w-5 h-5 transition-all duration-300 group-hover:scale-110`} />
@@ -135,9 +139,9 @@ export default function Navbar() {
           {/* Mobile search */}
           <div className="sm:hidden pb-2.5">
             <form onSubmit={handleSearch} className="relative">
-              <input type="text" placeholder="Search for products..."
+              <input type="text" placeholder={t('search_placeholder')}
                 value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-4 pr-10 py-2.5 text-sm rounded-xl bg-gray-100 border border-gray-200 focus:outline-none focus:border-pink-400 transition-all" />
+                className="w-full pl-4 pr-10 py-2.5 text-sm rounded-xl bg-gray-100 border border-gray-200 focus:outline-none focus:border-pink-400 transition-all" style={{ fontSize: '16px' }} />
               <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                 <Search className="w-4 h-4" />
               </button>

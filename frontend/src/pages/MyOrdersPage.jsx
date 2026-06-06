@@ -69,7 +69,7 @@ export default function MyOrdersPage() {
 
   return (
     <div className="min-h-screen bg-gray-50/50">
-      <SEO title="My Orders" noIndex={true} />
+      <SEO title="My Orders" noIndex={true} path="/my-orders" />
       {/* Breadcrumb */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 pt-4 sm:pt-6">
         <nav className="flex items-center gap-2 text-sm text-gray-400 mb-3 sm:mb-4">

@@ -41,6 +41,7 @@ export default function OrderConfirmationPage() {
   if (!order) {
     return (
       <div className="text-center py-20">
+        <SEO title="Order Not Found" noIndex={true} path={`/order-confirmation/${orderNumber}`} />
         <h2 className="text-xl font-bold mb-4">Order not found</h2>
         <Link to="/" className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all active:scale-95">Go Home</Link>
       </div>
@@ -51,7 +52,7 @@ export default function OrderConfirmationPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
-      <SEO title={`Order Confirmed — ${order.order_number}`} noIndex={true} />
+      <SEO title={`Order Confirmed — ${order.order_number}`} noIndex={true} path={`/order-confirmation/${orderNumber}`} />
       {/* Success Header */}
       <div className="text-center mb-10">
         <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5">
