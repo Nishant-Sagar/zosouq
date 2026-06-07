@@ -120,6 +120,22 @@ class Product(ProductBase):
         from_attributes = True
 
 
+class ReviewCreate(BaseModel):
+    reviewer_name: str
+    rating: int  # 1-5
+    comment: Optional[str] = None
+
+class ReviewOut(BaseModel):
+    id: int
+    reviewer_name: str
+    rating: int
+    comment: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class OrderItemCreate(BaseModel):
     product_id: int
     quantity: int

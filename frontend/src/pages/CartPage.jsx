@@ -12,7 +12,7 @@ export default function CartPage() {
 
   const handleRemove = (item) => {
     dispatch({ type: 'REMOVE_ITEM', payload: item.id })
-    addToast(`${item.name} removed from cart`, 'info')
+    addToast(`${item.name} — ${t('remove')}`, 'info')
   }
 
   const handleQty = (id, qty) => {
@@ -27,9 +27,9 @@ export default function CartPage() {
         <section className="pt-4 sm:pt-6 pb-2">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
             <nav className="flex items-center gap-2 text-sm text-gray-400 mb-3 sm:mb-4">
-              <Link to="/" className="hover:text-gray-700 transition-colors">Home</Link>
+              <Link to="/" className="hover:text-gray-700 transition-colors">{t('home')}</Link>
               <span>/</span>
-              <span className="text-gray-700 font-medium">Cart</span>
+              <span className="text-gray-700 font-medium">{t('cart')}</span>
             </nav>
             <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden"
               style={{ background: 'linear-gradient(135deg, #f0fdf4, #dcfce7, #bbf7d0)' }}>
@@ -69,9 +69,9 @@ export default function CartPage() {
       {/* ═══ BREADCRUMB ═══ */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 pt-4 sm:pt-6">
         <nav className="flex items-center gap-2 text-sm text-gray-400 mb-1">
-          <Link to="/" className="hover:text-gray-700 transition-colors">Home</Link>
+          <Link to="/" className="hover:text-gray-700 transition-colors">{t('home')}</Link>
           <span>/</span>
-          <span className="text-gray-700 font-medium">Cart</span>
+          <span className="text-gray-700 font-medium">{t('cart')}</span>
         </nav>
       </div>
 
@@ -99,9 +99,7 @@ export default function CartPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-start gap-2">
                     <div className="min-w-0">
-                      {item.brand && (
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-0.5">{item.brand}</p>
-                      )}
+
                       <Link to={`/product/${item.slug}`}>
                         <h3 className="font-medium text-gray-900 text-sm sm:text-base line-clamp-2 hover:text-pink-600 transition-colors">
                           {item.name}
@@ -135,7 +133,7 @@ export default function CartPage() {
                     <div className="text-right">
                       <p className="font-bold text-gray-900 text-sm sm:text-base">{formatPrice(item.price * item.quantity)}</p>
                       {item.quantity > 1 && (
-                        <p className="text-[10px] sm:text-xs text-gray-400">{formatPrice(item.price)} each</p>
+                        <p className="text-[10px] sm:text-xs text-gray-400">{formatPrice(item.price)} {t('each')}</p>
                       )}
                     </div>
                   </div>
@@ -144,10 +142,10 @@ export default function CartPage() {
             ))}
 
             <button
-              onClick={() => { dispatch({ type: 'CLEAR' }); addToast('Cart cleared', 'info') }}
+              onClick={() => { dispatch({ type: 'CLEAR' }); addToast(t('cart_cleared'), 'info') }}
               className="text-xs text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1 mt-1"
             >
-              <Trash2 className="w-3.5 h-3.5" /> Clear cart
+              <Trash2 className="w-3.5 h-3.5" /> {t('clear_cart')}
             </button>
           </div>
 
@@ -155,7 +153,7 @@ export default function CartPage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 sticky top-24">
               <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
-                Order Summary
+                {t('order_summary')}
               </h2>
 
               <div className="space-y-3 mb-4">
@@ -182,7 +180,7 @@ export default function CartPage() {
                 <div className="mb-4 px-3 py-2.5 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-2">
                   <Truck className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
                   <p className="text-xs text-amber-800 leading-snug">
-                    Add <span className="font-bold">{formatPrice(amountToFreeShipping)}</span> more for <span className="font-bold text-emerald-700">{t('free')} {t('shipping')}</span>!
+                    {t('add_more_shipping', { amount: formatPrice(amountToFreeShipping) })}
                   </p>
                 </div>
               )}
@@ -208,7 +206,7 @@ export default function CartPage() {
               <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-center gap-1.5 text-gray-400">
                 <Shield className="w-3.5 h-3.5" />
                 <p className="text-[10px] sm:text-xs">
-                  Secure checkout · Same-day delivery · Cash on delivery
+                  {t('secure_checkout')}
                 </p>
               </div>
             </div>

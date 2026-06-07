@@ -4,16 +4,18 @@ import { Package, Search, Mail, Clock, ChevronRight, ShoppingBag, Sparkles, Aler
 import { searchOrders, getOrder } from '../api'
 import { formatPrice } from '../utils/format'
 import SEO from '../components/SEO'
+import { useLanguage } from '../context/LanguageContext'
 
 const STATUS_MAP = {
-  pending: { label: 'Pending', color: 'bg-amber-100 text-amber-700', icon: Clock },
-  processing: { label: 'Processing', color: 'bg-blue-100 text-blue-700', icon: Package },
-  shipped: { label: 'Shipped', color: 'bg-purple-100 text-purple-700', icon: Truck },
-  delivered: { label: 'Delivered', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle },
-  cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-700', icon: AlertCircle },
+  pending: { labelKey: 'pending', color: 'bg-amber-100 text-amber-700', icon: Clock },
+  processing: { labelKey: 'processing', color: 'bg-blue-100 text-blue-700', icon: Package },
+  shipped: { labelKey: 'shipped', color: 'bg-purple-100 text-purple-700', icon: Truck },
+  delivered: { labelKey: 'delivered', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle },
+  cancelled: { labelKey: 'cancelled', color: 'bg-red-100 text-red-700', icon: AlertCircle },
 }
 
 export default function MyOrdersPage() {
+  const { lang, t } = useLanguage()
   const [mode, setMode] = useState('email') // 'email' | 'order'
   const [email, setEmail] = useState('')
   const [orderNumber, setOrderNumber] = useState('')
@@ -28,7 +30,7 @@ export default function MyOrdersPage() {
 
     if (mode === 'email') {
       if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) {
-        setError('Please enter a valid email address')
+        setError(t('enter_valid_email'))
         return
       }
       setLoading(true)
@@ -36,13 +38,13 @@ export default function MyOrdersPage() {
         const data = await searchOrders({ email: email.trim() })
         setOrders(data)
       } catch {
-        setError('Something went wrong. Please try again.')
+        setError(t('something_wrong'))
       } finally {
         setLoading(false)
       }
     } else {
       if (!orderNumber.trim()) {
-        setError('Please enter an order number')
+        setError(t('enter_order_number'))
         return
       }
       setLoading(true)
@@ -53,7 +55,7 @@ export default function MyOrdersPage() {
         if (err?.response?.status === 404) {
           setOrders([])
         } else {
-          setError('Something went wrong. Please try again.')
+          setError(t('something_wrong'))
         }
       } finally {
         setLoading(false)
@@ -62,7 +64,7 @@ export default function MyOrdersPage() {
   }
 
   const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleDateString('en-US', {
+    return new Date(dateStr).toLocaleDateString(lang === 'ar' ? 'ar-KW' : 'en-US', {
       year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
     })
   }
@@ -73,9 +75,9 @@ export default function MyOrdersPage() {
       {/* Breadcrumb */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 pt-4 sm:pt-6">
         <nav className="flex items-center gap-2 text-sm text-gray-400 mb-3 sm:mb-4">
-          <Link to="/" className="hover:text-gray-700 transition-colors">Home</Link>
+          <Link to="/" className="hover:text-gray-700 transition-colors">{t('home')}</Link>
           <span>/</span>
-          <span className="text-gray-700 font-medium">My Orders</span>
+          <span className="text-gray-700 font-medium">{t('my_orders')}</span>
         </nav>
       </div>
 
@@ -88,10 +90,10 @@ export default function MyOrdersPage() {
               <Package className="w-7 h-7 sm:w-9 sm:h-9 text-purple-600" />
             </div>
             <h1 className="text-xl sm:text-3xl font-bold text-gray-900 mb-1.5" style={{ fontFamily: 'Georgia, serif' }}>
-              My Orders
+              {t('my_orders')}
             </h1>
             <p className="text-gray-600 text-xs sm:text-sm max-w-md mx-auto">
-              Track your orders by entering your email address or order number
+              {t('track_orders')}
             </p>
           </div>
         </div>
@@ -111,7 +113,7 @@ export default function MyOrdersPage() {
                   : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              <Mail className="w-4 h-4" /> Search by Email
+              <Mail className="w-4 h-4" /> {t('search_by_email')}
             </button>
             <button
               type="button"
@@ -122,7 +124,7 @@ export default function MyOrdersPage() {
                   : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              <Hash className="w-4 h-4" /> Search by Order #
+              <Hash className="w-4 h-4" /> {t('search_by_order')}
             </button>
           </div>
 
@@ -137,7 +139,7 @@ export default function MyOrdersPage() {
                 )}
                 <input
                   type={mode === 'email' ? 'email' : 'text'}
-                  placeholder={mode === 'email' ? 'Enter your email address' : 'e.g. ORD-ABC12345'}
+                  placeholder={mode === 'email' ? t('enter_email') : 'ORD-ABC12345'}
                   value={mode === 'email' ? email : orderNumber}
                   onChange={e => mode === 'email' ? setEmail(e.target.value) : setOrderNumber(e.target.value)}
                   className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-900 transition-all hover:border-gray-300"
@@ -153,7 +155,7 @@ export default function MyOrdersPage() {
                 ) : (
                   <Search className="w-4 h-4" />
                 )}
-                <span className="hidden sm:inline">Search</span>
+                <span className="hidden sm:inline">{t('search')}</span>
               </button>
             </div>
 
@@ -174,22 +176,22 @@ export default function MyOrdersPage() {
                   <ShoppingBag className="w-7 h-7 text-gray-400" />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-1.5" style={{ fontFamily: 'Georgia, serif' }}>
-                  No orders found
+                  {t('no_orders')}
                 </h3>
                 <p className="text-gray-500 text-sm mb-5">
                   {mode === 'email'
-                    ? "We couldn't find any orders with this email address."
-                    : "We couldn't find an order with this number."}
+                    ? t('no_orders_email')
+                    : t('no_orders_number')}
                 </p>
                 <Link to="/"
                   className="inline-flex items-center gap-2 bg-gray-900 text-white px-5 py-2.5 rounded-xl text-xs font-semibold hover:bg-gray-800 transition-all active:scale-95">
-                  <Sparkles className="w-4 h-4" /> Start Shopping
+                  <Sparkles className="w-4 h-4" /> {t('start_shopping')}
                 </Link>
               </div>
             ) : (
               <>
                 <p className="text-sm text-gray-500 font-medium px-1">
-                  {orders.length} order{orders.length !== 1 ? 's' : ''} found
+                  {t('orders_found', { n: orders.length })}
                 </p>
                 {orders.map(order => {
                   const statusInfo = STATUS_MAP[order.status] || STATUS_MAP.pending
@@ -214,7 +216,7 @@ export default function MyOrdersPage() {
                         <div className="flex items-center gap-2">
                           <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold ${statusInfo.color}`}>
                             <StatusIcon className="w-3 h-3" />
-                            {statusInfo.label}
+                            {t(statusInfo.labelKey)}
                           </span>
                           <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-600 transition-colors" />
                         </div>
@@ -244,7 +246,7 @@ export default function MyOrdersPage() {
                         </div>
                         <div className="flex items-center justify-between">
                           <p className="text-xs text-gray-400">
-                            {order.items.length} item{order.items.length !== 1 ? 's' : ''} · {order.payment_method === 'cash_on_delivery' ? 'Cash on Delivery' : order.payment_method}
+                            {order.items.length} {order.items.length === 1 ? t('item') : t('items')} · {order.payment_method === 'cash_on_delivery' ? t('cash_on_delivery') : order.payment_method}
                           </p>
                           <p className="text-base font-extrabold text-gray-900 tabular-nums">{formatPrice(order.total_amount)}</p>
                         </div>

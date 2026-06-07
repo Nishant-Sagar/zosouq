@@ -2,18 +2,20 @@ import { Link, useLocation } from 'react-router-dom'
 import { Home, Heart, Grid3X3, ShoppingBag } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
+import { useLanguage } from '../context/LanguageContext'
 
 const NAV_ITEMS = [
-  { to: '/', icon: Home, label: 'Home' },
-  { to: '/categories', icon: Grid3X3, label: 'Categories' },
-  { to: '/wishlist', icon: Heart, label: 'Wishlist', showWishlistBadge: true },
-  { to: '/cart', icon: ShoppingBag, label: 'Cart', showBadge: true },
+  { to: '/', icon: Home, labelKey: 'home' },
+  { to: '/categories', icon: Grid3X3, labelKey: 'categories' },
+  { to: '/wishlist', icon: Heart, labelKey: 'wishlist', showWishlistBadge: true },
+  { to: '/cart', icon: ShoppingBag, labelKey: 'cart', showBadge: true },
 ]
 
 export default function MobileBottomNav() {
   const location = useLocation()
   const { totalItems } = useCart()
   const { totalWishlist } = useWishlist()
+  const { t } = useLanguage()
 
   const isActive = (to) => {
     if (to === '/') return location.pathname === '/'
@@ -24,7 +26,7 @@ export default function MobileBottomNav() {
   return (
     <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 mobile-bottom-nav" style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}>
       <div className="flex items-center justify-around h-16 px-2">
-        {NAV_ITEMS.map(({ to, icon: Icon, label, showBadge, showWishlistBadge }) => {
+        {NAV_ITEMS.map(({ to, icon: Icon, labelKey, showBadge, showWishlistBadge }) => {
           const active = isActive(to)
           return (
             <Link
@@ -65,7 +67,7 @@ export default function MobileBottomNav() {
               <span className={`text-[10px] font-semibold tracking-wide transition-all duration-300 ${
                 active ? 'text-pink-600' : ''
               }`}>
-                {label}
+                {t(labelKey)}
               </span>
 
               {/* Active dot indicator */}

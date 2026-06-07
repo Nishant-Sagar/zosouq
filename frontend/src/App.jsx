@@ -60,7 +60,7 @@ function StoreLayout() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1">
+      <main className="flex-1 overflow-x-hidden">
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/"                              element={<HomePage />} />

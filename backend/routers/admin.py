@@ -5,13 +5,13 @@ import time
 import os
 import re
 import shutil
+import io
 from datetime import datetime, timedelta
 from typing import Optional, List
 from pathlib import Path
 from urllib.parse import quote
 from fastapi import APIRouter, Depends, HTTPException, Header, UploadFile, File, Form, Request
 import csv
-import io
 from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, and_, or_
@@ -658,6 +658,7 @@ async def admin_upload_banner_image(
     if ext not in ALLOWED_EXTS:
         raise HTTPException(status_code=400, detail="Invalid file type")
     safe_loc = re.sub(r"[^a-z0-9_\-]", "_", location)
+    ext = Path(image.filename).suffix.lower()
     filename = f"{safe_loc}_{int(time.time())}{ext}"
     dest = BANNER_DIR / filename
     content = image.file.read()

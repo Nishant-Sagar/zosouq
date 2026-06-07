@@ -4,6 +4,7 @@ import { Search, Tag } from 'lucide-react'
 import { getProducts } from '../api'
 import ProductCard from '../components/ProductCard'
 import SEO from '../components/SEO'
+import { useLanguage } from '../context/LanguageContext'
 
 function Skeleton() {
   return (
@@ -19,6 +20,7 @@ function Skeleton() {
 }
 
 export default function SearchPage() {
+  const { t } = useLanguage()
   const [searchParams] = useSearchParams()
   const query = searchParams.get('q') || ''
   const maxPrice = searchParams.get('max_price') || ''
@@ -43,8 +45,8 @@ export default function SearchPage() {
   }, [query, maxPrice, minPrice])
 
   const pageTitle = isPriceFilter
-    ? `Products Under ${maxPrice} KWD`
-    : query ? `Results for "${query}"` : 'Search Products'
+    ? t('products_under', { price: maxPrice })
+    : query ? t('results_for', { query }) : t('search_products')
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -61,7 +63,7 @@ export default function SearchPage() {
         </div>
         {!loading && hasQuery && (
           <p className="text-slate-500 text-sm ml-9">
-            {products.length} product{products.length !== 1 ? 's' : ''} found
+            {t(products.length === 1 ? 'product_found' : 'products_found', { n: products.length })}
           </p>
         )}
       </div>
@@ -69,7 +71,7 @@ export default function SearchPage() {
       {!hasQuery && (
         <div className="text-center py-16">
           <Search className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-          <p className="text-slate-500">Use the search bar above to find products.</p>
+          <p className="text-slate-500">{t('use_search')}</p>
         </div>
       )}
 
@@ -81,11 +83,11 @@ export default function SearchPage() {
 
       {!loading && hasQuery && products.length === 0 && (
         <div className="text-center py-20">
-          <h3 className="text-xl font-semibold text-slate-900 mb-2">No results found</h3>
+          <h3 className="text-xl font-semibold text-slate-900 mb-2">{t('no_results')}</h3>
           <p className="text-slate-500 mb-6">
-            {isPriceFilter ? `No products found under ${maxPrice} KWD.` : `We couldn't find anything for "${query}". Try different keywords.`}
+            {isPriceFilter ? t('no_products_under', { price: maxPrice }) : t('no_results_detail', { query })}
           </p>
-          <Link to="/" className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all active:scale-95">Browse All Products</Link>
+          <Link to="/" className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all active:scale-95">{t('browse_all_products')}</Link>
         </div>
       )}
 

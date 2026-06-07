@@ -38,8 +38,21 @@ const BANNER_GROUPS = [
     ],
   },
   {
+    group: 'Home – Exclusive Collection',
+    slots: [
+      { key: 'home_exclusive_banner', label: 'Exclusive Collection', type: 'full_banner' },
+    ],
+  },
+  {
+    group: 'Home – Flash Sale',
+    slots: [
+      { key: 'home_flash_sale_banner', label: 'Flash Sale', type: 'full_banner' },
+    ],
+  },
+  {
     group: 'Perfumes Category',
     slots: [
+      { key: 'category_hero_perfumes', label: 'Hero Banner', type: 'category_hero' },
       { key: 'category_promo_perfumes_1', label: 'Promo 1', type: 'category_promo' },
       { key: 'category_promo_perfumes_2', label: 'Promo 2', type: 'category_promo' },
     ],
@@ -47,6 +60,7 @@ const BANNER_GROUPS = [
   {
     group: 'Makeup Category',
     slots: [
+      { key: 'category_hero_makeup', label: 'Hero Banner', type: 'category_hero' },
       { key: 'category_promo_makeup_1', label: 'Promo 1', type: 'category_promo' },
       { key: 'category_promo_makeup_2', label: 'Promo 2', type: 'category_promo' },
     ],
@@ -54,6 +68,7 @@ const BANNER_GROUPS = [
   {
     group: 'Hair Care Category',
     slots: [
+      { key: 'category_hero_hair_care', label: 'Hero Banner', type: 'category_hero' },
       { key: 'category_promo_hair_care_1', label: 'Promo 1', type: 'category_promo' },
       { key: 'category_promo_hair_care_2', label: 'Promo 2', type: 'category_promo' },
     ],
@@ -61,6 +76,7 @@ const BANNER_GROUPS = [
   {
     group: 'Body Care Category',
     slots: [
+      { key: 'category_hero_body_care', label: 'Hero Banner', type: 'category_hero' },
       { key: 'category_promo_body_care_1', label: 'Promo 1', type: 'category_promo' },
       { key: 'category_promo_body_care_2', label: 'Promo 2', type: 'category_promo' },
     ],
@@ -68,6 +84,7 @@ const BANNER_GROUPS = [
   {
     group: 'Personal Care Category',
     slots: [
+      { key: 'category_hero_personal_care', label: 'Hero Banner', type: 'category_hero' },
       { key: 'category_promo_personal_care_1', label: 'Promo 1', type: 'category_promo' },
       { key: 'category_promo_personal_care_2', label: 'Promo 2', type: 'category_promo' },
     ],
@@ -81,6 +98,13 @@ const SLOT_DEFAULTS = {
   home_sale_poster_1: { img: '/images/luxury-perfumes.webp', link: '/category/perfumes', badgeText: 'UP TO 70% OFF', badgeIcon: 'percent', badgeColor: 'red', eyebrow: 'Exclusive Deals', title: 'Luxury Perfumes at Unbeatable Prices', cta: 'Shop the Sale' },
   home_sale_poster_2: { img: '/images/hair-care-category.webp', link: '/category/hair-care', badgeText: 'NEW SEASON', badgeIcon: 'sparkles', badgeColor: 'amber', eyebrow: 'Fresh Arrivals', title: 'Hair Care Essentials', cta: 'Browse Collection' },
   home_delivery_banner: { img: '/images/free-delivery.webp', title: 'Same-Day Delivery Anywhere in Kuwait', description: 'Order today, receive today. Free delivery on orders over KD 10. Cash on delivery available.', tags: 'All Kuwait Areas,Same-Day Delivery,Cash on Delivery' },
+  home_exclusive_banner: { img: '/images/exclusive-collection.webp', title: 'Luxury Perfumes\nUnder One Roof', description: 'Authentic fragrances from Arabian and international brands.', cta: 'Explore Collection', link: '/category/perfumes' },
+  home_flash_sale_banner: { img: '/images/makeup-collection.webp', title: 'Up to 50% Off\nPremium Makeup', description: 'Limited time only. Foundation, lipstick, eyeshadow and more.', cta: 'Shop Now', link: '/category/makeup' },
+  category_hero_perfumes: { img: '/images/poster-perfumes.webp', tagline: 'Your Signature Awaits', description: 'Discover authentic Arabian ouds & international designer fragrances, all under one roof.' },
+  category_hero_makeup: { img: '/images/poster-makeup.webp', tagline: 'Glow Like Never Before', description: 'Premium foundations, lipsticks, eyeshadows & more from top international brands.' },
+  category_hero_hair_care: { img: '/images/poster-haircare.webp', tagline: 'Healthy Hair, Happy You', description: 'Professional shampoos, conditioners, masks & styling products for every hair type.' },
+  category_hero_body_care: { img: '/images/poster-bodycare.webp', tagline: 'Pamper Your Body', description: 'Luxury body scrubs, lotions, washes & spa essentials for radiant, silky-smooth skin.' },
+  category_hero_personal_care: { img: '/images/poster-personalcare.webp', tagline: 'Self Care is the Best Care', description: 'Cleansers, moisturizers, serums, sunscreens & everyday essentials you can trust.' },
   category_promo_perfumes_1: { img: '/images/arabian-oud.webp', title: 'Arabian Oud Collection', sub: 'Exclusive fragrances from the finest oud' },
   category_promo_perfumes_2: { img: '/images/designer-perfumes.webp', title: 'Designer Perfumes', sub: 'Up to 60% less than retail' },
   category_promo_makeup_1: { img: '/images/makeup-collection.webp', title: 'Foundation Edit', sub: 'Find your perfect shade match' },
@@ -97,6 +121,8 @@ const SLOT_TYPE_LABELS = {
   hero_slide: 'Hero Slide',
   sale_poster: 'Sale Banner',
   delivery_banner: 'Delivery Banner',
+  full_banner: 'Full Banner',
+  category_hero: 'Category Hero',
   category_promo: 'Category Promo',
 }
 
@@ -204,7 +230,7 @@ function ImageField({ location, value, onChange }) {
   )
 }
 
-function BannerForm({ slot, formData, setFormData, onSave, saving, saved }) {
+function BannerForm({ slot, formData, setFormData, onSave, onCancel, saving, saved }) {
   const set = (key) => (val) => setFormData(prev => ({ ...prev, [key]: val }))
 
   return (
@@ -307,6 +333,34 @@ function BannerForm({ slot, formData, setFormData, onSave, saving, saved }) {
         </>
       )}
 
+      {slot.type === 'full_banner' && (
+        <>
+          <Field label="Title" hint="(use \n for line break)">
+            <TextInput value={formData.title} onChange={set('title')} placeholder="e.g. Luxury Perfumes\nUnder One Roof" />
+          </Field>
+          <Field label="Description">
+            <TextareaInput value={formData.description} onChange={set('description')} placeholder="e.g. Authentic fragrances from Arabian and international brands." rows={2} />
+          </Field>
+          <Field label="Button Text">
+            <TextInput value={formData.cta} onChange={set('cta')} placeholder="e.g. Explore Collection" />
+          </Field>
+          <Field label="Destination Link">
+            <TextInput value={formData.link} onChange={set('link')} placeholder="e.g. /category/perfumes" />
+          </Field>
+        </>
+      )}
+
+      {slot.type === 'category_hero' && (
+        <>
+          <Field label="Tagline" hint="(small badge above the title)">
+            <TextInput value={formData.tagline} onChange={set('tagline')} placeholder="e.g. Your Signature Awaits" />
+          </Field>
+          <Field label="Description">
+            <TextareaInput value={formData.description} onChange={set('description')} placeholder="e.g. Discover authentic fragrances from top global brands." rows={2} />
+          </Field>
+        </>
+      )}
+
       {slot.type === 'category_promo' && (
         <>
           <Field label="Title">
@@ -318,22 +372,125 @@ function BannerForm({ slot, formData, setFormData, onSave, saving, saved }) {
         </>
       )}
 
-      <button
-        type="button"
-        onClick={onSave}
-        disabled={saving}
-        className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-gray-100 text-gray-900 font-semibold rounded-xl transition-colors disabled:opacity-60"
-      >
-        {saving ? (
-          <><Loader className="w-4 h-4 animate-spin" /> Saving…</>
-        ) : saved ? (
-          <><Check className="w-4 h-4 text-emerald-600" /> Saved!</>
-        ) : (
-          <><Save className="w-4 h-4" /> Save Banner</>
-        )}
-      </button>
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={saving}
+          className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold rounded-xl transition-colors disabled:opacity-60"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={saving}
+          className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-gray-100 text-gray-900 font-semibold rounded-xl transition-colors disabled:opacity-60"
+        >
+          {saving ? (
+            <><Loader className="w-4 h-4 animate-spin" /> Saving…</>
+          ) : saved ? (
+            <><Check className="w-4 h-4 text-emerald-600" /> Saved!</>
+          ) : (
+            <><Save className="w-4 h-4" /> Save Banner</>
+          )}
+        </button>
+      </div>
     </div>
   )
+}
+
+const BADGE_COLORS_MAP = { red: '#dc2626', amber: '#d97706', emerald: '#059669', blue: '#2563eb', violet: '#7c3aed', pink: '#db2777' }
+
+function BannerPreview({ slot, formData }) {
+  const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').replace('/api', '')
+  const imgSrc = formData.img
+    ? formData.img.startsWith('http') ? formData.img : `${apiBase}${formData.img}`
+    : null
+
+  const previewStyle = { position: 'relative', width: '100%', overflow: 'hidden', borderRadius: '12px', background: '#1f2937' }
+
+  if (slot.type === 'hero_slide') {
+    return (
+      <div style={{ ...previewStyle, height: '200px' }}>
+        {imgSrc && <img src={imgSrc} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(3,7,18,0.85) 0%, rgba(3,7,18,0.5) 60%, rgba(3,7,18,0.1) 100%)' }} />
+        <div style={{ position: 'relative', zIndex: 1, padding: '20px 28px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          {formData.badge && <span style={{ display: 'inline-block', background: '#f59e0b', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '6px', marginBottom: '8px', width: 'fit-content' }}>{formData.badge}</span>}
+          <div style={{ color: '#fff', fontSize: '18px', fontWeight: 800, lineHeight: 1.2, marginBottom: '6px' }}>{formData.title || 'Title'}</div>
+          {formData.discount && <div style={{ color: '#fbbf24', fontSize: '36px', fontWeight: 900, lineHeight: 1, marginBottom: '8px' }}>{formData.discount}<span style={{ fontSize: '18px' }}>%</span> <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>OFF</span></div>}
+          {formData.cta && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#fff', color: '#111', fontSize: '11px', fontWeight: 700, padding: '6px 14px', borderRadius: '8px', width: 'fit-content' }}>{formData.cta} →</span>}
+        </div>
+      </div>
+    )
+  }
+
+  if (slot.type === 'sale_poster') {
+    return (
+      <div style={{ ...previewStyle, height: '160px' }}>
+        {imgSrc && <img src={imgSrc} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,7,18,0.9) 0%, rgba(3,7,18,0.4) 100%)' }} />
+        <div style={{ position: 'absolute', top: '10px', right: '10px', background: BADGE_COLORS_MAP[formData.badgeColor] || '#dc2626', color: '#fff', fontSize: '9px', fontWeight: 700, padding: '3px 8px', borderRadius: '6px' }}>{formData.badgeText}</div>
+        <div style={{ position: 'absolute', bottom: 0, left: 0, padding: '12px 16px' }}>
+          {formData.eyebrow && <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', marginBottom: '3px' }}>{formData.eyebrow}</div>}
+          <div style={{ color: '#fff', fontSize: '14px', fontWeight: 700, lineHeight: 1.3 }}>{formData.title || 'Title'}</div>
+          {formData.cta && <span style={{ color: '#fff', fontSize: '10px', marginTop: '4px', display: 'block' }}>{formData.cta} →</span>}
+        </div>
+      </div>
+    )
+  }
+
+  if (slot.type === 'delivery_banner' || slot.type === 'full_banner') {
+    return (
+      <div style={{ ...previewStyle, height: '160px' }}>
+        {imgSrc && <img src={imgSrc} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(6,78,59,0.9) 0%, rgba(6,78,59,0.5) 60%, rgba(6,78,59,0.1) 100%)' }} />
+        <div style={{ position: 'relative', zIndex: 1, padding: '16px 20px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ color: '#fff', fontSize: '15px', fontWeight: 800, lineHeight: 1.3, marginBottom: '6px', whiteSpace: 'pre-line' }}>{formData.title || 'Title'}</div>
+          {formData.description && <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: '10px', marginBottom: '8px', maxWidth: '280px' }}>{formData.description}</div>}
+          {formData.cta && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#fff', color: '#111', fontSize: '10px', fontWeight: 700, padding: '5px 12px', borderRadius: '7px', width: 'fit-content' }}>{formData.cta} →</span>}
+          {formData.tags && (
+            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px' }}>
+              {formData.tags.split(',').map(t => t.trim()).filter(Boolean).map(tag => (
+                <span key={tag} style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: '9px', padding: '2px 7px', borderRadius: '5px' }}>{tag}</span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  if (slot.type === 'category_hero') {
+    return (
+      <div style={{ ...previewStyle, height: '200px' }}>
+        {imgSrc && <img src={imgSrc} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(3,7,18,0.9) 0%, rgba(3,7,18,0.6) 60%, rgba(3,7,18,0.2) 100%)' }} />
+        <div style={{ position: 'relative', zIndex: 1, padding: '20px 28px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', maxWidth: '360px' }}>
+          {formData.tagline && (
+            <span style={{ display: 'inline-block', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.8)', fontSize: '9px', fontWeight: 700, padding: '3px 10px', borderRadius: '7px', marginBottom: '10px', width: 'fit-content', backdropFilter: 'blur(4px)' }}>{formData.tagline}</span>
+          )}
+          <div style={{ color: '#fff', fontSize: '20px', fontWeight: 800, lineHeight: 1.2, marginBottom: '8px', fontFamily: 'Georgia, serif' }}>Category Name</div>
+          {formData.description && <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '10px', lineHeight: 1.5 }}>{formData.description}</div>}
+        </div>
+      </div>
+    )
+  }
+
+  if (slot.type === 'category_promo') {
+    return (
+      <div style={{ ...previewStyle, height: '140px' }}>
+        {imgSrc && <img src={imgSrc} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(3,7,18,0.8) 0%, rgba(3,7,18,0.3) 100%)' }} />
+        <div style={{ position: 'absolute', bottom: 0, left: 0, padding: '12px 16px' }}>
+          <div style={{ color: '#fff', fontSize: '14px', fontWeight: 700, marginBottom: '3px' }}>{formData.title || 'Title'}</div>
+          <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: '11px' }}>{formData.sub || 'Subtitle'}</div>
+        </div>
+      </div>
+    )
+  }
+
+  return null
 }
 
 export default function AdminBannersPage() {
@@ -346,6 +503,7 @@ export default function AdminBannersPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [loadingBanners, setLoadingBanners] = useState(true)
+  const [originalData, setOriginalData] = useState(SLOT_DEFAULTS[BANNER_GROUPS[0].slots[0].key] ?? {})
 
   useEffect(() => {
     const token = localStorage.getItem('admin_token')
@@ -357,15 +515,24 @@ export default function AdminBannersPage() {
         list.forEach(b => { map[b.location] = b.data })
         setBanners(map)
         const firstKey = BANNER_GROUPS[0].slots[0].key
-        setFormData(map[firstKey] ?? SLOT_DEFAULTS[firstKey] ?? {})
+        const d = map[firstKey] ?? SLOT_DEFAULTS[firstKey] ?? {}
+        setFormData(d)
+        setOriginalData(d)
       })
       .catch(() => {})
       .finally(() => setLoadingBanners(false))
   }, [])
 
   const handleSelectSlot = (key) => {
+    const d = banners[key] ?? SLOT_DEFAULTS[key] ?? {}
     setSelectedKey(key)
-    setFormData(banners[key] ?? SLOT_DEFAULTS[key] ?? {})
+    setFormData(d)
+    setOriginalData(d)
+    setSaved(false)
+  }
+
+  const handleCancel = () => {
+    setFormData(originalData)
     setSaved(false)
   }
 
@@ -374,6 +541,7 @@ export default function AdminBannersPage() {
     try {
       await adminUpdateBanner(selectedKey, formData)
       setBanners(prev => ({ ...prev, [selectedKey]: formData }))
+      setOriginalData(formData)
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
     } catch {
@@ -507,6 +675,7 @@ export default function AdminBannersPage() {
                     formData={formData}
                     setFormData={setFormData}
                     onSave={handleSave}
+                    onCancel={handleCancel}
                     saving={saving}
                     saved={saved}
                   />

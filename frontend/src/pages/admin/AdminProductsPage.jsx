@@ -828,7 +828,6 @@ export default function AdminProductsPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-medium text-white line-clamp-2 leading-tight">{p.name}</p>
-                          {p.brand && <p className="text-xs text-gray-500 mt-0.5">{p.brand}</p>}
                           {!p.description && <span className="text-[10px] text-amber-400 font-medium">No description</span>}
                         </div>
                       </div>

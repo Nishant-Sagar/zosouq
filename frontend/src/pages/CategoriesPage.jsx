@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Sparkles, Package, Truck, Shield, Zap, ChevronRight } from 'lucide-react'
 import { getCategories } from '../api'
 import SEO from '../components/SEO'
+import { useLanguage } from '../context/LanguageContext'
 
 /* ─── Visual config per category ─── */
 const CAT_CONFIG = {
@@ -74,13 +75,14 @@ const DEFAULT_CONFIG = {
 
 /* ─── Trust / Perks ─── */
 const PERKS = [
-  { icon: Truck, title: 'Free Delivery', desc: 'All across Kuwait', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  { icon: Shield, title: '100% Authentic', desc: 'Guaranteed genuine', color: 'text-blue-600', bg: 'bg-blue-50' },
-  { icon: Zap, title: 'Same Day', desc: 'Delivered today', color: 'text-amber-600', bg: 'bg-amber-50' },
-  { icon: Package, title: '4,400+ Products', desc: 'Huge selection', color: 'text-purple-600', bg: 'bg-purple-50' },
+  { icon: Truck, titleKey: 'free_delivery', descKey: 'all_across_kuwait', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  { icon: Shield, titleKey: 'authentic', descKey: 'guaranteed_genuine', color: 'text-blue-600', bg: 'bg-blue-50' },
+  { icon: Zap, titleKey: 'same_day', descKey: 'delivered_today', color: 'text-amber-600', bg: 'bg-amber-50' },
+  { icon: Package, titleKey: 'products_4400', descKey: 'huge_selection', color: 'text-purple-600', bg: 'bg-purple-50' },
 ]
 
 export default function CategoriesPage() {
+  const { lang, t } = useLanguage()
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -105,20 +107,20 @@ export default function CategoriesPage() {
       <section className="py-4 sm:py-6">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden group" style={{ minHeight: 'clamp(220px, 35vw, 340px)' }}>
-            <img src="/images/luxury-perfumes.webp" alt="Shop by Category"
+            <img src="/images/luxury-perfumes.webp" alt={t('shop_by_category')}
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-[1.02]"
               loading="eager" fetchPriority="high" decoding="async" />
             <div className="absolute inset-0 bg-gradient-to-r from-gray-950/90 via-gray-950/60 to-gray-950/30" />
             <div className="absolute inset-0 flex items-center">
               <div className="px-6 sm:px-12 max-w-lg">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm text-white/80 text-[10px] sm:text-xs font-semibold mb-3 sm:mb-4 border border-white/10">
-                  <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> {categories.length || 5} Categories &middot; 4,400+ Products
+                  <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> {t('categories_count', { categories: categories.length || 5 })}
                 </div>
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 leading-tight" style={{ fontFamily: 'Georgia, serif' }}>
-                  Shop by Category
+                  {t('shop_by_category')}
                 </h1>
                 <p className="text-white/60 text-xs sm:text-sm max-w-md">
-                  From luxurious perfumes to everyday essentials — find exactly what you need, beautifully curated for you.
+                  {t('categories_intro')}
                 </p>
               </div>
             </div>
@@ -143,6 +145,7 @@ export default function CategoriesPage() {
                 const cfg = CAT_CONFIG[cat.slug] || DEFAULT_CONFIG
                 const count = cat.product_count || 0
                 const isEven = idx % 2 === 0
+                const categoryName = t(cat.slug.replace(/-/g, '_'))
 
                 return (
                   <div key={cat.id}
@@ -153,7 +156,7 @@ export default function CategoriesPage() {
                       <div className="relative lg:w-[45%] overflow-hidden">
                         <Link to={`/category/${cat.slug}`} className="block">
                           <div className="relative aspect-[16/10] sm:aspect-[16/9] lg:aspect-auto lg:h-full lg:min-h-[380px]">
-                            <img src={cfg.img} alt={cat.name}
+                            <img src={cfg.img} alt={categoryName}
                               className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-105"
                               loading="lazy" decoding="async" />
                             <div className={`absolute inset-0 bg-gradient-to-t ${cfg.gradient} opacity-40 group-hover:opacity-30 transition-opacity duration-500`} />
@@ -163,7 +166,7 @@ export default function CategoriesPage() {
                               <div className="absolute top-4 left-4 sm:top-5 sm:left-5">
                                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/90 backdrop-blur-sm shadow-lg text-sm font-bold text-gray-900">
                                   <Package className="w-3.5 h-3.5" />
-                                  {count.toLocaleString()}+ Products
+                                  {count.toLocaleString()}+ {t('products')}
                                 </div>
                               </div>
                             )}
@@ -192,12 +195,12 @@ export default function CategoriesPage() {
                             {String(idx + 1).padStart(2, '0')}
                           </span>
                           <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
-                            {cat.name}
+                            {categoryName}
                           </h2>
                         </div>
 
                         <p className="text-gray-500 text-sm sm:text-base leading-relaxed mb-5 max-w-md">
-                          {cfg.desc}
+                          {lang === 'ar' ? t('categories_intro') : cfg.desc}
                         </p>
 
                         {/* Tag chips — single scrollable row on mobile */}
@@ -216,11 +219,11 @@ export default function CategoriesPage() {
                         <div className="flex items-center gap-3">
                           <Link to={`/category/${cat.slug}`}
                             className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r ${cfg.gradient} text-white text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:gap-3 active:scale-95`}>
-                            Browse {cat.name} <ArrowRight className="w-4 h-4" />
+                            {t('browse_category', { category: categoryName })} <ArrowRight className="w-4 h-4" />
                           </Link>
                           {count > 0 && (
                             <span className="text-xs text-gray-400 hidden sm:inline">
-                              {count.toLocaleString()} products available
+                              {t('products_available', { n: count.toLocaleString() })}
                             </span>
                           )}
                         </div>
@@ -240,27 +243,28 @@ export default function CategoriesPage() {
       <section className="py-8 sm:py-12 bg-gradient-to-b from-gray-50/80 to-white">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Quick Browse</h2>
-            <p className="text-gray-500 text-sm mt-1">Jump straight to what you need</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{t('quick_browse')}</h2>
+            <p className="text-gray-500 text-sm mt-1">{t('quick_browse_sub')}</p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
             {categories.map(cat => {
               const cfg = CAT_CONFIG[cat.slug] || DEFAULT_CONFIG
               const count = cat.product_count || 0
+              const categoryName = t(cat.slug.replace(/-/g, '_'))
               return (
                 <Link key={cat.id} to={`/category/${cat.slug}`}
                   className="group relative rounded-2xl overflow-hidden aspect-[4/5] flex flex-col justify-end shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                  <img src={cfg.img} alt={cat.name}
+                  <img src={cfg.img} alt={categoryName}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" decoding="async" />
                   <div className={`absolute inset-0 bg-gradient-to-t ${cfg.gradient} opacity-60 group-hover:opacity-50 transition-opacity`} />
                   <div className="relative z-10 p-4 sm:p-5">
-                    <h3 className="text-white font-bold text-base sm:text-lg drop-shadow-md">{cat.name}</h3>
+                    <h3 className="text-white font-bold text-base sm:text-lg drop-shadow-md">{categoryName}</h3>
                     {count > 0 && (
-                      <p className="text-white/60 text-[11px] sm:text-xs mt-0.5">{count.toLocaleString()} products</p>
+                      <p className="text-white/60 text-[11px] sm:text-xs mt-0.5">{count.toLocaleString()} {t('products')}</p>
                     )}
                     <span className="inline-flex items-center gap-1 text-white text-[11px] sm:text-xs font-medium mt-2.5 group-hover:gap-2 transition-all bg-white/20 backdrop-blur-sm px-2.5 py-1.5 rounded-lg">
-                      Shop <ChevronRight className="w-3 h-3" />
+                      {t('shop')} <ChevronRight className="w-3 h-3" />
                     </span>
                   </div>
                 </Link>
@@ -279,18 +283,18 @@ export default function CategoriesPage() {
             <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 via-transparent to-purple-500/5" />
             <div className="relative z-10 p-8 sm:p-12 lg:p-16">
               <div className="text-center mb-10">
-                <h2 className="text-xl sm:text-2xl font-bold text-white">Why Shop with Zosouq?</h2>
-                <p className="text-gray-500 text-sm mt-2">Trusted by thousands of customers across Kuwait</p>
+                <h2 className="text-xl sm:text-2xl font-bold text-white">{t('why_shop')}</h2>
+                <p className="text-gray-500 text-sm mt-2">{t('why_shop_sub')}</p>
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 {PERKS.map(p => (
-                  <div key={p.title}
+                  <div key={p.titleKey}
                     className="flex flex-col items-center text-center p-5 sm:p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
                     <div className={`w-12 h-12 rounded-xl ${p.bg} flex items-center justify-center mb-3`}>
                       <p.icon className={`w-5 h-5 ${p.color}`} />
                     </div>
-                    <h3 className="text-white font-semibold text-sm">{p.title}</h3>
-                    <p className="text-gray-500 text-xs mt-1">{p.desc}</p>
+                    <h3 className="text-white font-semibold text-sm">{t(p.titleKey)}</h3>
+                    <p className="text-gray-500 text-xs mt-1">{t(p.descKey)}</p>
                   </div>
                 ))}
               </div>

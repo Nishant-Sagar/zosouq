@@ -4,7 +4,7 @@ import { ShoppingCart, Search, Menu, X, Heart, LayoutGrid, Package } from 'lucid
 import { useCart } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useLanguage } from '../context/LanguageContext'
-import { getCategories } from '../api'
+import { getCategories, getProducts, prefetch } from '../api'
 
 const CAT_COLORS = {
   'perfumes': 'from-violet-500 to-purple-600',
@@ -57,37 +57,47 @@ export default function Navbar() {
   return (
     <>
       {/* ── Announcement Bar ── */}
-      <div className="bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 text-white text-center text-xs py-2 px-4">
-        <span>⚡ Same-Day Delivery across Kuwait — Free on Orders over <b>KD 10</b></span>
+      <div className="text-white text-center text-xs py-2 px-4" style={{ background: 'linear-gradient(to right, #9f1239, #be185d, #b45309)' }}>
+        <span>⚡ {t('same_day_announcement')}</span>
       </div>
 
       {/* ── Main Header ── */}
-      <header className={`sticky top-0 z-50 bg-white/90 backdrop-blur-xl transition-all duration-300 ${scrolled ? 'shadow-lg shadow-gray-100/50' : ''}`}
-        style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+      <header
+        className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl transition-shadow duration-300"
+        style={{
+          borderBottom: '1px solid rgba(15, 23, 42, 0.1)',
+          boxShadow: scrolled
+            ? '0 8px 24px rgba(15, 23, 42, 0.12)'
+            : '0 4px 16px rgba(15, 23, 42, 0.08)',
+        }}
+      >
 
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
-          <div className="flex items-center h-14 sm:h-16 gap-4">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6" dir="ltr">
+          <div className="flex sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(280px,32rem)_minmax(0,1fr)] items-center h-16 sm:h-[72px] gap-4">
 
-            {/* Mobile menu toggle */}
-            <button onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden p-1.5 -ml-1.5 text-gray-700 hover:text-gray-900">
-              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+            <div className="flex items-center min-w-0">
+              {/* Mobile menu toggle */}
+              <button onClick={() => setMobileOpen(!mobileOpen)}
+                className="lg:hidden p-1.5 -ml-1.5 text-gray-700 hover:text-gray-900">
+                {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
 
-            {/* Logo */}
-            <Link to="/" className="flex-shrink-0">
-              <img
-                src="/logo.png"
-                srcSet="/logo.png 1x, /logo@2x.png 2x"
-                alt="Zosouq"
-                className="h-9 sm:h-10 w-auto object-contain"
-                loading="eager"
-                decoding="async"
-              />
-            </Link>
+              {/* Logo */}
+              <Link to="/" className="flex-shrink-0">
+                <img
+                  src="/logo.png"
+                  srcSet="/logo.png 1x, /logo@2x.png 2x"
+                  alt="Zosouq"
+                  className="w-auto object-contain"
+                  style={{ height: '52px' }}
+                  loading="eager"
+                  decoding="async"
+                />
+              </Link>
+            </div>
 
             {/* Desktop search bar */}
-            <form onSubmit={handleSearch} className="hidden sm:flex flex-1 max-w-lg mx-auto">
+            <form onSubmit={handleSearch} className="hidden sm:flex w-full">
               <div className="relative w-full">
                 <input type="text" placeholder={t('search_placeholder')}
                   value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
@@ -99,7 +109,7 @@ export default function Navbar() {
             </form>
 
             {/* Right icons */}
-            <div className="flex items-center gap-1 sm:gap-2 ml-auto">
+            <div className="flex items-center justify-end gap-1 sm:gap-2 ml-auto sm:ml-0 min-w-0">
               {/* Language toggle */}
               <button
                 onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
@@ -151,7 +161,7 @@ export default function Navbar() {
 
         {/* Desktop category nav — poster-style mini cards */}
         <nav className="hidden lg:block border-t border-gray-100/50">
-          <div className="max-w-[1400px] mx-auto px-6 py-2 flex items-center justify-center gap-2">
+          <div className="max-w-[1400px] mx-auto px-6 py-2 flex items-center justify-center gap-2" dir="ltr">
             <Link to="/categories"
               className={`px-3.5 py-2 text-sm font-medium transition-all duration-200 rounded-xl flex items-center gap-1.5 ${
                 location.pathname === '/categories'
@@ -159,7 +169,7 @@ export default function Navbar() {
                   : 'text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100'
               }`}>
               <LayoutGrid className="w-3.5 h-3.5" />
-              All
+              {t('all')}
             </Link>
             <span className="w-px h-6 bg-gray-200 mx-0.5" />
             {categories.map(cat => {
@@ -169,6 +179,7 @@ export default function Navbar() {
               const subtleBg = CAT_SUBTLE_BG[cat.slug] || 'bg-gray-50 hover:bg-gray-100'
               return (
                 <Link key={cat.id} to={`/category/${cat.slug}`}
+                  onMouseEnter={() => prefetch(() => getProducts({ category_slug: cat.slug, limit: 2000 }))}
                   className={`group relative overflow-hidden rounded-xl flex items-center gap-2 px-2 py-1.5 transition-all duration-200 ${
                     active
                       ? 'bg-gradient-to-r ' + colorClass + ' text-white shadow-md'
@@ -177,7 +188,7 @@ export default function Navbar() {
                   <div className="w-7 h-7 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-black/5">
                     <img src={navImg} alt="" className={`w-full h-full object-cover ${cat.slug === 'hair-care' ? 'object-top' : ''}`} loading="lazy" decoding="async" />
                   </div>
-                  <span className="text-sm font-medium pr-1">{cat.name}</span>
+                  <span className="text-sm font-medium pr-1">{t(cat.slug.replace(/-/g, '_'))}</span>
                 </Link>
               )
             })}
@@ -228,13 +239,13 @@ export default function Navbar() {
                 }`}>
                   <LayoutGrid className="w-4 h-4" />
                 </span>
-                <span>All Categories</span>
+                <span>{t('all_categories')}</span>
               </Link>
             </div>
 
             {/* Category cards */}
             <div className="p-4 pt-2">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">Shop by Category</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">{t('shop_by_category')}</p>
               <div className="space-y-2">
                 {categories.map(cat => {
                   const colorClass = CAT_COLORS[cat.slug] || 'from-gray-500 to-gray-600'
@@ -243,6 +254,7 @@ export default function Navbar() {
                   const active = location.pathname === `/category/${cat.slug}`
                   return (
                     <Link key={cat.id} to={`/category/${cat.slug}`}
+                      onMouseEnter={() => prefetch(() => getProducts({ category_slug: cat.slug, limit: 2000 }))}
                       className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                         active
                           ? 'bg-gradient-to-r ' + colorClass + ' text-white shadow-lg'
@@ -251,7 +263,7 @@ export default function Navbar() {
                       <div className={`w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 shadow-sm ${active ? 'ring-2 ring-white/30' : 'ring-1 ring-black/5'}`}>
                         <img src={navImg} alt="" className={`w-full h-full object-cover ${cat.slug === 'hair-care' ? 'object-top' : ''}`} loading="lazy" decoding="async" />
                       </div>
-                      <span>{cat.name}</span>
+                      <span>{t(cat.slug.replace(/-/g, '_'))}</span>
                     </Link>
                   )
                 })}
@@ -271,7 +283,7 @@ export default function Navbar() {
                 }`}>
                   <Package className="w-4 h-4" />
                 </span>
-                <span>My Orders</span>
+                <span>{t('my_orders')}</span>
               </Link>
             </div>
           </div>

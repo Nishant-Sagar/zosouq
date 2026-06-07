@@ -6,7 +6,7 @@ import { useWishlist } from '../context/WishlistContext'
 import { useLanguage } from '../context/LanguageContext'
 import { formatPrice } from '../utils/format'
 
-function ProductCard({ product, compact, accentColor }) {
+function ProductCard({ product, compact, accentColor, priority = false }) {
   const { dispatch } = useCart()
   const { dispatch: wishlistDispatch, isWishlisted } = useWishlist()
   const addToast = useToast()
@@ -27,7 +27,7 @@ function ProductCard({ product, compact, accentColor }) {
 
   return (
     <Link to={`/product/${product.slug}`} className="group block h-full">
-      <div className="product-card rounded-2xl overflow-hidden h-full flex flex-col bg-white border border-gray-100 hover:border-transparent hover:shadow-xl hover:shadow-gray-200/60 transition-all duration-300">
+      <div className="product-card rounded-2xl overflow-hidden h-full flex flex-col bg-white border border-gray-200 shadow-[0_4px_16px_rgba(15,23,42,0.12)] hover:border-gray-200 hover:shadow-[0_10px_28px_rgba(15,23,42,0.17)] hover:-translate-y-1 transition-all duration-300">
 
         {/* Image */}
         <div className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 aspect-square">
@@ -35,7 +35,9 @@ function ProductCard({ product, compact, accentColor }) {
             src={product.image_url}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-            loading="lazy"
+            loading={priority ? 'eager' : 'lazy'}
+            decoding="async"
+            fetchPriority={priority ? 'high' : 'auto'}
           />
 
           {/* Discount badge */}
@@ -52,7 +54,7 @@ function ProductCard({ product, compact, accentColor }) {
               e.preventDefault()
               e.stopPropagation()
               wishlistDispatch({ type: 'TOGGLE', payload: product })
-              addToast(wishlisted ? `${product.name} removed from wishlist` : `${product.name} added to wishlist`)
+              addToast(wishlisted ? `${product.name} — ${t('removed_wishlist')}` : `${product.name} — ${t('added_wishlist')}`)
             }}
             className={`absolute top-2.5 right-2.5 w-8 h-8 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-md ${
               wishlisted
@@ -68,7 +70,7 @@ function ProductCard({ product, compact, accentColor }) {
           {/* Out of stock */}
           {product.stock === 0 && (
             <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center">
-              <span className="bg-gray-900 text-white text-xs font-semibold px-4 py-2 rounded-full">Sold Out</span>
+              <span className="bg-gray-900 text-white text-xs font-semibold px-4 py-2 rounded-full">{t('sold_out')}</span>
             </div>
           )}
 
@@ -82,12 +84,7 @@ function ProductCard({ product, compact, accentColor }) {
 
         {/* Info */}
         <div className={`flex flex-col flex-1 ${compact ? 'p-2.5' : 'p-3 sm:p-4'}`}>
-          {product.brand && (
-            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-              style={{ color: accent + 'aa' }}>
-              {product.brand}
-            </p>
-          )}
+
           <h3 className={`font-medium text-gray-800 line-clamp-2 flex-1 mb-2 transition-colors duration-200 ${compact ? 'text-xs' : 'text-sm leading-snug'}`}
             style={{ '--hover-color': accent }}
           >

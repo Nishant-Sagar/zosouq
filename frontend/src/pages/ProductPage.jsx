@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useRef } from 'react'
 import { useLanguage } from '../context/LanguageContext'
 import { useParams, Link } from 'react-router-dom'
 import { ShoppingCart, Star, ChevronLeft, Package, Truck, Shield, Minus, Plus, CheckCircle, ChevronRight, Heart, Share2, Sparkles } from 'lucide-react'
-import { getProduct, getProducts } from '../api'
+import { getProduct, getProducts, getReviews, submitReview } from '../api'
 import { useCart, useToast } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
 import ProductCard from '../components/ProductCard'
@@ -36,6 +36,13 @@ export default function ProductPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [dragX, setDragX] = useState(0)
   const [lbDragX, setLbDragX] = useState(0)
+  const [reviews, setReviews] = useState([])
+  const [reviewName, setReviewName] = useState('')
+  const [reviewComment, setReviewComment] = useState('')
+  const [reviewRating, setReviewRating] = useState(0)
+  const [hoverRating, setHoverRating] = useState(0)
+  const [submitting, setSubmitting] = useState(false)
+  const [reviewSubmitted, setReviewSubmitted] = useState(false)
   const touchStartX = useRef(null)
   const lbTouchStartX = useRef(null)
   const isDragging = useRef(false)
@@ -87,9 +94,10 @@ export default function ProductPage() {
     getProduct(slug).then(p => {
       setProduct(p)
       if (p.category?.slug) {
-        getProducts({ category_slug: p.category.slug, limit: 8 }).then(setRelated)
+        getProducts({ category_slug: p.category.slug, limit: 8 }).then(r => setRelated(Array.isArray(r) ? r : []))
       }
     }).catch(() => {}).finally(() => setLoading(false))
+    getReviews(slug).then(r => setReviews(Array.isArray(r) ? r : [])).catch(() => {})
     window.scrollTo(0, 0)
   }, [slug])
 
@@ -147,10 +155,10 @@ export default function ProductPage() {
         <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-5">
           <Sparkles className="w-8 h-8 text-gray-400" />
         </div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'Georgia, serif' }}>Product Not Found</h3>
-        <p className="text-gray-500 text-sm mb-6">This product may have been removed or the link is incorrect.</p>
+        <h3 className="text-xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'Georgia, serif' }}>{t('product_not_found')}</h3>
+        <p className="text-gray-500 text-sm mb-6">{t('product_not_found_sub')}</p>
         <Link to="/" className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all active:scale-95">
-          Back to Home
+          {t('back_home')}
         </Link>
       </div>
     )
@@ -204,12 +212,12 @@ export default function ProductPage() {
       {/* ═══ BREADCRUMB ═══ */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 pt-4 sm:pt-6">
         <nav className="flex items-center gap-2 text-sm text-gray-400 mb-1">
-          <Link to="/" className="hover:text-gray-700 transition-colors">Home</Link>
+          <Link to="/" className="hover:text-gray-700 transition-colors">{t('home')}</Link>
           <span>/</span>
           {product.category && (
             <>
               <Link to={`/category/${product.category.slug}`} className="hover:text-gray-700 transition-colors">
-                {product.category.name}
+                {t(product.category.slug.replace(/-/g, '_'))}
               </Link>
               <span>/</span>
             </>
@@ -224,106 +232,123 @@ export default function ProductPage() {
           <div className="grid lg:grid-cols-2 gap-6 lg:gap-12">
 
             {/* ── Image Gallery ── */}
-            <div className="flex flex-col gap-3">
-              <div className="relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-white select-none"
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={e => handleTouchEnd(e, allImages.length)}
-              >
-                {/* Sliding strip */}
-                <div
-                  className="flex h-full"
-                  style={{
-                    width: `${allImages.length * 100}%`,
-                    transform: `translateX(calc(-${activeImg * (100 / allImages.length)}% + ${dragX / allImages.length}px))`,
-                    transition: dragX !== 0 ? 'none' : 'transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                    willChange: 'transform',
-                  }}
-                >
-                  {allImages.map((img, i) => (
-                    <div key={i} className="h-full flex-shrink-0 cursor-zoom-in" style={{ width: `${100 / allImages.length}%` }}
-                      onClick={() => !isDragging.current && setLightboxOpen(true)}>
-                      <img src={img} alt={`${product.name} ${i + 1}`}
-                        className="w-full h-full object-cover"
-                        loading={i === 0 ? 'eager' : 'lazy'}
-                        fetchPriority={i === 0 ? 'high' : 'auto'}
-                        draggable={false}
-                      />
-                    </div>
-                  ))}
-                </div>
+            <div className="flex gap-3 min-w-0">
 
-                {/* Discount badge */}
-                {discount && (
-                  <div className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs sm:text-sm font-bold px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-xl shadow-lg pointer-events-none">
-                    {discount}% OFF
-                  </div>
-                )}
-
-                {/* Wishlist */}
-                <button
-                  onClick={() => {
-                    wishlistDispatch({ type: 'TOGGLE', payload: product })
-                    addToast(wishlisted ? `${product.name} removed from wishlist` : `${product.name} added to wishlist`)
-                  }}
-                  className={`absolute top-3 right-3 sm:top-4 sm:right-4 w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-lg ${
-                    wishlisted ? 'bg-pink-500 text-white' : 'bg-white/90 backdrop-blur-sm text-gray-500 hover:text-pink-500'
-                  }`}
-                >
-                  <Heart className={`w-5 h-5 ${wishlisted ? 'fill-white' : ''}`} />
-                </button>
-
-                {/* Arrows — hidden on touch devices */}
-                {allImages.length > 1 && (
-                  <>
-                    <button onClick={() => goTo(activeImg - 1, allImages.length)}
-                      className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm shadow-md items-center justify-center hover:bg-white transition-colors">
-                      <ChevronLeft className="w-5 h-5 text-gray-700" />
-                    </button>
-                    <button onClick={() => goTo(activeImg + 1, allImages.length)}
-                      className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm shadow-md items-center justify-center hover:bg-white transition-colors">
-                      <ChevronRight className="w-5 h-5 text-gray-700" />
-                    </button>
-                    {/* Dots */}
-                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/20 backdrop-blur-sm px-2.5 py-1.5 rounded-full pointer-events-none">
-                      {allImages.map((_, i) => (
-                        <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === activeImg ? 'bg-white w-4' : 'bg-white/50 w-1.5'}`} />
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Thumbnails */}
+              {/* Vertical thumbnails — left side (desktop only) */}
               {allImages.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                <div className="hidden sm:flex flex-col gap-2 flex-shrink-0 overflow-y-auto no-scrollbar" style={{ maxHeight: '480px' }}>
                   {allImages.map((img, i) => (
                     <button
                       key={i}
                       onClick={() => setActiveImg(i)}
-                      className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 transition-all ${
-                        i === activeImg ? 'border-gray-900 shadow-md' : 'border-transparent opacity-50 hover:opacity-100'
+                      className={`w-14 h-16 lg:w-16 lg:h-20 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 bg-white ${
+                        i === activeImg
+                          ? 'border-gray-900 shadow-md opacity-100'
+                          : 'border-gray-200 opacity-60 hover:opacity-100 hover:border-gray-400'
                       }`}
                     >
                       <img
                         src={img}
                         alt={`${product.name} view ${i + 1}`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain p-1"
                         loading="lazy" decoding="async"
                       />
                     </button>
                   ))}
                 </div>
               )}
+
+              {/* Main image */}
+              <div className="flex-1 flex flex-col gap-3 min-w-0">
+                <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-white select-none"
+                  style={{ height: 'clamp(300px, 80vw, 480px)' }}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={e => handleTouchEnd(e, allImages.length)}
+                >
+                  {/* Sliding strip */}
+                  <div
+                    className="flex h-full"
+                    style={{
+                      width: `${allImages.length * 100}%`,
+                      transform: `translateX(calc(-${activeImg * (100 / allImages.length)}% + ${dragX / allImages.length}px))`,
+                      transition: dragX !== 0 ? 'none' : 'transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                      willChange: 'transform',
+                    }}
+                  >
+                    {allImages.map((img, i) => (
+                      <div key={i} className="h-full flex-shrink-0 cursor-zoom-in p-4 sm:p-6" style={{ width: `${100 / allImages.length}%` }}
+                        onClick={() => !isDragging.current && setLightboxOpen(true)}>
+                        <img src={img} alt={`${product.name} ${i + 1}`}
+                          className="w-full h-full object-contain"
+                          loading={i === 0 ? 'eager' : 'lazy'}
+                          fetchPriority={i === 0 ? 'high' : 'auto'}
+                          draggable={false}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Discount badge */}
+                  {discount && (
+                    <div className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-xl shadow-lg pointer-events-none">
+                      -{discount}%
+                    </div>
+                  )}
+
+                  {/* Wishlist */}
+                  <button
+                    onClick={() => {
+                      wishlistDispatch({ type: 'TOGGLE', payload: product })
+                      addToast(wishlisted ? `${product.name} — ${t('removed_wishlist')}` : `${product.name} — ${t('added_wishlist')}`)
+                    }}
+                    className={`absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-lg ${
+                      wishlisted ? 'bg-pink-500 text-white' : 'bg-white/90 backdrop-blur-sm text-gray-500 hover:text-pink-500'
+                    }`}
+                  >
+                    <Heart className={`w-5 h-5 ${wishlisted ? 'fill-white' : ''}`} />
+                  </button>
+
+                  {/* Desktop nav arrows */}
+                  {allImages.length > 1 && (
+                    <>
+                      <button onClick={() => goTo(activeImg - 1, allImages.length)}
+                        className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white shadow-md border border-gray-200 items-center justify-center hover:bg-gray-50 transition-colors">
+                        <ChevronLeft className="w-5 h-5 text-gray-700" />
+                      </button>
+                      <button onClick={() => goTo(activeImg + 1, allImages.length)}
+                        className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white shadow-md border border-gray-200 items-center justify-center hover:bg-gray-50 transition-colors">
+                        <ChevronRight className="w-5 h-5 text-gray-700" />
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Mobile thumbnails — horizontal at bottom */}
+                {allImages.length > 1 && (
+                  <div className="flex sm:hidden gap-2 overflow-x-auto no-scrollbar pb-1 w-full">
+                    {allImages.map((img, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setActiveImg(i)}
+                        className={`flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 bg-white transition-all ${
+                          i === activeImg ? 'border-gray-900 shadow-md' : 'border-gray-200 opacity-60'
+                        }`}
+                      >
+                        <img src={img} alt={`${product.name} view ${i + 1}`}
+                          className="w-full h-full object-contain p-1"
+                          loading="lazy" decoding="async"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* ── Product Details ── */}
             <div className="flex flex-col py-1 lg:py-4">
 
-              {/* Brand */}
-              {product.brand && (
-                <p className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">{product.brand}</p>
-              )}
 
               {/* Name */}
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight mb-3" style={{ fontFamily: 'Georgia, serif' }}>
@@ -347,11 +372,11 @@ export default function ProductPage() {
                   )}
                   {discount && (
                     <span className="bg-red-100 text-red-600 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-lg">
-                      Save {discount}%
+                      {t('save_percent', { percent: discount })}
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-gray-400 mt-1">Inclusive of all taxes</p>
+                <p className="text-[11px] text-gray-400 mt-1">{t('inclusive_taxes')}</p>
               </div>
 
               {/* Stock */}
@@ -405,7 +430,7 @@ export default function ProductPage() {
                       }`}
                     >
                       {added ? (
-                        <><CheckCircle className="w-5 h-5" /> Added!</>
+                        <><CheckCircle className="w-5 h-5" /> {t('added')}</>
                       ) : (
                         <><ShoppingCart className="w-5 h-5" /> {t('add_to_cart')}</>
                       )}
@@ -425,28 +450,148 @@ export default function ProductPage() {
                 <button
                   onClick={() => {
                     wishlistDispatch({ type: 'TOGGLE', payload: product })
-                    addToast(wishlisted ? `${product.name} removed from wishlist` : `${product.name} added to wishlist`)
+                    addToast(wishlisted ? `${product.name} — ${t('removed_wishlist')}` : `${product.name} — ${t('added_wishlist')}`)
                   }}
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-pink-300 text-pink-600 text-sm font-semibold hover:bg-pink-50 transition-all mb-6"
                 >
                   <Heart className={`w-4 h-4 ${wishlisted ? 'fill-pink-500' : ''}`} />
-                  {wishlisted ? 'Saved to Wishlist' : 'Add to Wishlist'}
+                  {wishlisted ? t('saved_wishlist') : t('add_wishlist')}
                 </button>
               )}
 
               {/* ── Trust Perks ── */}
               <div className="grid grid-cols-3 gap-3 border-t border-gray-100 pt-5">
                 {[
-                  { icon: Truck, label: 'Same-Day Delivery' },
-                  { icon: Package, label: 'Cash on Delivery' },
-                  { icon: Shield, label: '100% Authentic' },
-                ].map(({ icon: Icon, label }) => (
-                  <div key={label} className="flex items-center gap-2 text-gray-500">
+                  { icon: Truck, labelKey: 'same_day' },
+                  { icon: Package, labelKey: 'cash_on_delivery' },
+                  { icon: Shield, labelKey: 'authentic' },
+                ].map(({ icon: Icon, labelKey }) => (
+                  <div key={labelKey} className="flex items-center gap-2 text-gray-500">
                     <Icon className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-[10px] sm:text-xs font-medium">{label}</span>
+                    <span className="text-[10px] sm:text-xs font-medium">{t(labelKey)}</span>
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ REVIEWS ═══ */}
+      <section className="py-6 sm:py-8 bg-white border-t border-gray-100">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-5">
+            <h2 className="text-lg font-bold text-gray-900">{t('reviews')}</h2>
+            <span className="flex items-center gap-1.5 text-sm text-gray-500">
+              <Stars rating={product.rating} />
+              <span className="font-semibold text-gray-800">{product.rating.toFixed(1)}</span>
+              <span className="text-gray-400">({product.review_count})</span>
+            </span>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Left — Write a review */}
+            <div className="bg-gray-50 rounded-2xl p-4 sm:p-5">
+              {!reviewSubmitted ? (
+                <>
+                  <h3 className="text-sm font-bold text-gray-900 mb-3">{t('write_review')}</h3>
+                  {/* Stars */}
+                  <div className="flex gap-1 mb-3">
+                    {[1,2,3,4,5].map(star => (
+                      <button key={star} type="button"
+                        onClick={() => setReviewRating(star)}
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        className="transition-transform hover:scale-110 active:scale-95">
+                        <svg width="28" height="28" viewBox="0 0 24 24">
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                            fill={star <= (hoverRating || reviewRating) ? '#f59e0b' : '#e5e7eb'}
+                            stroke={star <= (hoverRating || reviewRating) ? '#f59e0b' : '#d1d5db'}
+                            strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                    ))}
+                    {reviewRating > 0 && (
+                      <span className="text-xs text-amber-600 font-medium self-center ml-1">
+                        {['','Poor','Fair','Good','Very Good','Excellent'][reviewRating]}
+                      </span>
+                    )}
+                  </div>
+                  {/* Name + Comment inline */}
+                  <input type="text" value={reviewName} onChange={e => setReviewName(e.target.value)}
+                    placeholder={t('your_name')}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm mb-2 focus:outline-none focus:border-pink-400 bg-white transition-all"/>
+                  <textarea value={reviewComment} onChange={e => setReviewComment(e.target.value)}
+                    placeholder={t('share_experience')} rows={2}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm mb-3 focus:outline-none focus:border-pink-400 bg-white transition-all resize-none"/>
+                  <button
+                    disabled={submitting || !reviewRating || !reviewName.trim()}
+                    onClick={async () => {
+                      if (!reviewRating || !reviewName.trim()) return
+                      setSubmitting(true)
+                      try {
+                        const newReview = await submitReview(slug, {
+                          reviewer_name: reviewName.trim(),
+                          rating: reviewRating,
+                          comment: reviewComment.trim() || null,
+                        })
+                        setReviews(prev => [newReview, ...prev])
+                        setProduct(prev => ({
+                          ...prev,
+                          rating: ((prev.rating * prev.review_count) + reviewRating) / (prev.review_count + 1),
+                          review_count: prev.review_count + 1,
+                        }))
+                        setReviewSubmitted(true)
+                      } catch {
+                        addToast('Failed to submit. Please try again.', 'error')
+                      } finally {
+                        setSubmitting(false)
+                      }
+                    }}
+                    className="w-full py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed">
+                    {submitting ? t('submitting') : t('submit_review')}
+                  </button>
+                </>
+              ) : (
+                <div className="flex items-center gap-3 py-4">
+                  <div className="w-9 h-9 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M3 8l3.5 3.5 6.5-7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{t('review_thanks')}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{t('review_thanks_sub')}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right — Review list */}
+            <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+              {reviews.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-32 text-gray-400">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="mb-2 opacity-40">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <p className="text-sm">{t('no_reviews')}</p>
+                </div>
+              ) : reviews.map(r => (
+                <div key={r.id} className="border border-gray-100 rounded-xl p-3 sm:p-4">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-pink-400 to-violet-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                        {r.reviewer_name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900">{r.reviewer_name}</span>
+                    </div>
+                    <Stars rating={r.rating} />
+                  </div>
+                  {r.comment && <p className="text-xs text-gray-500 leading-relaxed ml-9">{r.comment}</p>}
+                  <p className="text-[10px] text-gray-300 mt-1 ml-9">{new Date(r.created_at).toLocaleDateString('en-KW', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -461,12 +606,12 @@ export default function ProductPage() {
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>
                   {t('you_may_like')}
                 </h2>
-                <p className="text-xs text-gray-400 mt-0.5">More from {product.category?.name || 'this collection'}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{t('more_from', { category: product.category ? t(product.category.slug.replace(/-/g, '_')) : t('collection') })}</p>
               </div>
               {product.category && (
                 <Link to={`/category/${product.category.slug}`}
                   className="text-xs sm:text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors flex items-center gap-1">
-                  View All <ChevronRight className="w-4 h-4" />
+                  {t('view_all')} <ChevronRight className="w-4 h-4" />
                 </Link>
               )}
             </div>
@@ -487,7 +632,7 @@ export default function ProductPage() {
             <button onClick={() => setLightboxOpen(false)}
               className="flex items-center gap-1.5 text-white/80 hover:text-white active:scale-95 transition-all">
               <ChevronLeft className="w-5 h-5" />
-              <span className="text-sm font-medium">Back</span>
+              <span className="text-sm font-medium">{t('back')}</span>
             </button>
             <span className="text-white/60 text-sm font-medium">{activeImg + 1} / {allImages.length}</span>
             <button onClick={() => setLightboxOpen(false)}

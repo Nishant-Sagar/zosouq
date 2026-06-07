@@ -1,22 +1,24 @@
 import { Link } from 'react-router-dom'
 import { Heart } from 'lucide-react'
+import { useLanguage } from '../context/LanguageContext'
 
 const CATEGORIES = [
-  ['Perfumes', 'perfumes'],
-  ['Makeup', 'makeup'],
-  ['Hair Care', 'hair-care'],
-  ['Body Care', 'body-care'],
-  ['Personal Care', 'personal-care'],
+  ['perfumes', 'perfumes'],
+  ['makeup', 'makeup'],
+  ['hair_care', 'hair-care'],
+  ['body_care', 'body-care'],
+  ['personal_care', 'personal-care'],
 ]
 
 const LINKS = [
-  { label: 'Home', to: '/' },
-  { label: 'My Cart', to: '/cart' },
-  { label: 'My Orders', to: '/my-orders' },
-  { label: 'Wishlist', to: '/wishlist' },
+  { labelKey: 'home', to: '/' },
+  { labelKey: 'cart', to: '/cart' },
+  { labelKey: 'my_orders', to: '/my-orders' },
+  { labelKey: 'wishlist', to: '/wishlist' },
 ]
 
 export default function Footer() {
+  const { t } = useLanguage()
   return (
     <footer className="bg-gray-900 text-gray-300 pb-16 sm:pb-0">
       <div className="h-0.5 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500" />
@@ -44,10 +46,10 @@ export default function Footer() {
 
         {/* Links in two compact columns */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mb-4">
-          {[...LINKS, ...CATEGORIES.map(([label, slug]) => ({ label, to: `/category/${slug}` }))].map(l => (
-            <Link key={l.label} to={l.to}
+          {[...LINKS, ...CATEGORIES.map(([labelKey, slug]) => ({ labelKey, to: `/category/${slug}` }))].map(l => (
+            <Link key={l.labelKey} to={l.to}
               className="text-xs text-gray-400 hover:text-pink-400 transition-colors truncate">
-              {l.label}
+              {t(l.labelKey)}
             </Link>
           ))}
         </div>
@@ -58,8 +60,8 @@ export default function Footer() {
             © 2025 Zosouq <Heart className="w-2.5 h-2.5 text-pink-500 fill-pink-500" /> Kuwait
           </p>
           <div className="flex gap-1.5">
-            <span className="px-2 py-0.5 rounded text-[10px] bg-gray-800 text-gray-500 border border-gray-700">COD</span>
-            <span className="px-2 py-0.5 rounded text-[10px] bg-gray-800 text-gray-500 border border-gray-700">Same-Day</span>
+            <span className="px-2 py-0.5 rounded text-[10px] bg-gray-800 text-gray-500 border border-gray-700">{t('cash_on_delivery')}</span>
+            <span className="px-2 py-0.5 rounded text-[10px] bg-gray-800 text-gray-500 border border-gray-700">{t('same_day')}</span>
           </div>
         </div>
       </div>
@@ -74,10 +76,10 @@ export default function Footer() {
               <span className="text-2xl font-bold text-white" style={{ fontFamily: 'Georgia, serif' }}>Zosouq</span>
             </Link>
             <p className="text-sm text-gray-400 mb-4 leading-relaxed">
-              Kuwait's trusted destination for authentic beauty, skincare & fragrances.
+              {t('footer_description')}
             </p>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li>📍 Kuwait City</li>
+              <li>📍 {t('kuwait_city')}</li>
               <li>✉️ support@zosouq.com</li>
               <li>📞 +965 XXXX XXXX</li>
             </ul>
@@ -97,11 +99,11 @@ export default function Footer() {
 
           {/* Useful Links */}
           <div>
-            <h4 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Links</h4>
+            <h4 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">{t('links')}</h4>
             <ul className="space-y-2.5">
               {LINKS.map(l => (
-                <li key={l.label}>
-                  <Link to={l.to} className="text-sm text-gray-400 hover:text-pink-400 transition-colors">{l.label}</Link>
+                <li key={l.labelKey}>
+                  <Link to={l.to} className="text-sm text-gray-400 hover:text-pink-400 transition-colors">{t(l.labelKey)}</Link>
                 </li>
               ))}
             </ul>
@@ -109,11 +111,11 @@ export default function Footer() {
 
           {/* Categories */}
           <div>
-            <h4 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Categories</h4>
+            <h4 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">{t('categories')}</h4>
             <ul className="space-y-2.5">
-              {CATEGORIES.map(([name, slug]) => (
+              {CATEGORIES.map(([nameKey, slug]) => (
                 <li key={slug}>
-                  <Link to={`/category/${slug}`} className="text-sm text-gray-400 hover:text-pink-400 transition-colors">{name}</Link>
+                  <Link to={`/category/${slug}`} className="text-sm text-gray-400 hover:text-pink-400 transition-colors">{t(nameKey)}</Link>
                 </li>
               ))}
             </ul>
@@ -125,8 +127,8 @@ export default function Footer() {
             © 2025 Zosouq. Made with <Heart className="w-3 h-3 text-pink-500 fill-pink-500" /> in Kuwait
           </p>
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1.5 rounded-lg text-xs bg-gray-800 text-gray-400 border border-gray-700">Cash on Delivery</span>
-            <span className="px-3 py-1.5 rounded-lg text-xs bg-gray-800 text-gray-400 border border-gray-700">Same-Day Delivery</span>
+            <span className="px-3 py-1.5 rounded-lg text-xs bg-gray-800 text-gray-400 border border-gray-700">{t('cash_on_delivery')}</span>
+            <span className="px-3 py-1.5 rounded-lg text-xs bg-gray-800 text-gray-400 border border-gray-700">{t('same_day')}</span>
           </div>
         </div>
       </div>

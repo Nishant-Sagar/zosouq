@@ -7,6 +7,8 @@ from database import engine, Base, SessionLocal
 from routers import categories, products, orders
 from routers.admin import router as admin_router, ensure_default_admin
 from routers.banners import router as banners_router
+from routers.reviews import router as reviews_router
+from routers.sitemap import router as sitemap_router
 
 # Create all tables (safe to run every startup — skips existing tables)
 Base.metadata.create_all(bind=engine)
@@ -39,6 +41,8 @@ app.include_router(products.router,   prefix="/api/products",   tags=["products"
 app.include_router(orders.router,     prefix="/api/orders",     tags=["orders"])
 app.include_router(admin_router,      prefix="/api/admin",      tags=["admin"])
 app.include_router(banners_router,    prefix="/api/banners",    tags=["banners"])
+app.include_router(reviews_router,    prefix="/api/reviews",    tags=["reviews"])
+app.include_router(sitemap_router,    prefix="",                tags=["sitemap"])
 
 STATIC_DIR = Path(__file__).parent / "static"
 STATIC_DIR.mkdir(exist_ok=True)

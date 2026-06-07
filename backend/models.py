@@ -42,6 +42,7 @@ class Product(Base):
 
     category = relationship("Category", back_populates="products")
     order_items = relationship("OrderItem", back_populates="product")
+    reviews = relationship("Review", back_populates="product")
 
 
 class Order(Base):
@@ -81,6 +82,19 @@ class OrderItem(Base):
 
     order = relationship("Order", back_populates="items")
     product = relationship("Product", back_populates="order_items")
+
+
+class Review(Base):
+    __tablename__ = "reviews"
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(Integer, ForeignKey("products.id"), index=True)
+    reviewer_name = Column(String(200))
+    rating = Column(Integer)  # 1-5
+    comment = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    product = relationship("Product", back_populates="reviews")
 
 
 class AdminUser(Base):

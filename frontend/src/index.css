@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap');
+/* Arabic fonts loaded via index.html for faster preload */
 
 @tailwind base;
 @tailwind components;
@@ -6,24 +6,57 @@
 
 @layer base {
   * { box-sizing: border-box; }
+  /* Ensure sticky works on all mobile browsers including older iOS Safari */
+  .sticky { position: -webkit-sticky; position: sticky; }
   html {
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
   body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background-color: #fafafa;
     color: #1a1a1a;
   }
+  /* ── Arabic / RTL ── */
+  /* direction goes on body, NOT html — putting it on html breaks position:sticky on mobile */
   html.rtl body {
-    font-family: 'Cairo', system-ui, -apple-system, sans-serif;
-  }
-  html.rtl {
     direction: rtl;
+    font-family: 'Tajawal', 'Cairo', system-ui, sans-serif;
+    line-height: 1.8;
+    letter-spacing: 0;
+    word-spacing: 0.05em;
   }
+  /* Headings use Cairo which has great Arabic display weights */
+  html.rtl h1, html.rtl h2, html.rtl h3,
+  html.rtl h4, html.rtl h5, html.rtl h6 {
+    font-family: 'Cairo', system-ui, sans-serif;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: 0;
+  }
+  /* Remove Latin letter-spacing from all text in RTL */
+  html.rtl * {
+    letter-spacing: 0 !important;
+    word-spacing: normal;
+  }
+  /* Inputs and buttons */
+  html.rtl input, html.rtl textarea, html.rtl select {
+    font-family: 'Tajawal', 'Cairo', system-ui, sans-serif;
+    text-align: right;
+  }
+  /* Fix tracking-wider/widest utility classes which break Arabic */
+  html.rtl [class*="tracking-"] {
+    letter-spacing: 0 !important;
+  }
+  /* Flip icons that indicate direction */
   html.rtl .rtl-flip {
     transform: scaleX(-1);
+  }
+  /* Announcement bar and badges */
+  html.rtl .font-mono {
+    font-family: 'Cairo', system-ui, sans-serif;
   }
   ::selection {
     background: rgba(236, 72, 153, 0.15);

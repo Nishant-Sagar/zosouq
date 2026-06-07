@@ -4,6 +4,7 @@ import { SlidersHorizontal, ChevronDown, X, Sparkles, ArrowRight, Star } from 'l
 import { getCategory, getProducts, getProductCount, getBanner } from '../api'
 import ProductCard from '../components/ProductCard'
 import SEO from '../components/SEO'
+import { useLanguage } from '../context/LanguageContext'
 
 /* ── Category visual themes ── */
 const CATEGORY_THEMES = {
@@ -97,6 +98,54 @@ const DEFAULT_THEME = {
   chips: [],
 }
 
+const CATEGORY_AR_COPY = {
+  perfumes: {
+    tagline: 'عطرك المميز بانتظارك',
+    description: 'اكتشف أفخم العطور العربية والعود والعطور العالمية الأصلية في مكان واحد.',
+    chips: ['عود', 'زهري', 'خشبي', 'منعش', 'شرقي', 'حمضيات'],
+    promos: [
+      { title: 'مجموعة العود العربي', sub: 'عطور حصرية من أجود أنواع العود' },
+      { title: 'عطور المصممين', sub: 'وفر حتى ٦٠٪ من سعر التجزئة' },
+    ],
+  },
+  makeup: {
+    tagline: 'تألقي بإطلالة لا مثيل لها',
+    description: 'تسوقي كريمات الأساس وأحمر الشفاه وظلال العيون الفاخرة من أشهر العلامات العالمية.',
+    chips: ['أحمر شفاه', 'كريم أساس', 'ظلال عيون', 'ماسكارا', 'أحمر خدود', 'برايمر'],
+    promos: [
+      { title: 'مختارات كريم الأساس', sub: 'اعثري على الدرجة المثالية لبشرتك' },
+      { title: 'مجموعة الشفاه', sub: 'ألوان رائجة لهذا الموسم' },
+    ],
+  },
+  'hair-care': {
+    tagline: 'شعر صحي وإطلالة أجمل',
+    description: 'شامبو وبلسم وأقنعة ومنتجات تصفيف احترافية تناسب جميع أنواع الشعر.',
+    chips: ['شامبو', 'بلسم', 'قناع الشعر', 'سيروم', 'زيت', 'تصفيف'],
+    promos: [
+      { title: 'إصلاح واستعادة', sub: 'علاجات ترطيب عميق للشعر' },
+      { title: 'أساسيات التصفيف', sub: 'نتائج احترافية في المنزل' },
+    ],
+  },
+  'body-care': {
+    tagline: 'دللي جسمك',
+    description: 'مقشرات ولوشن وغسول وعلاجات سبا فاخرة لبشرة ناعمة ومشرقة.',
+    chips: ['لوشن', 'مقشر', 'غسول الجسم', 'كريم', 'زبدة الجسم', 'رذاذ'],
+    promos: [
+      { title: 'سبا في المنزل', sub: 'مقشرات وأقنعة فاخرة للجسم' },
+      { title: 'استعدي للصيف', sub: 'ترطيب وإشراقة طوال اليوم' },
+    ],
+  },
+  'personal-care': {
+    tagline: 'العناية بنفسك هي الأفضل',
+    description: 'منظفات ومرطبات وسيرومات وواقي شمس واحتياجات يومية يمكنك الوثوق بها.',
+    chips: ['منظف', 'مرطب', 'سيروم', 'واقي شمس', 'مزيل عرق', 'صابون'],
+    promos: [
+      { title: 'الأساسيات اليومية', sub: 'كل ما تحتاجه لروتينك اليومي' },
+      { title: 'مختارات العناية بالبشرة', sub: 'سيرومات ومنظفات والمزيد' },
+    ],
+  },
+}
+
 function ProductSkeleton() {
   return (
     <div className="overflow-hidden animate-pulse rounded-2xl bg-white">
@@ -119,29 +168,48 @@ const SORT_OPTIONS = [
 
 /* ── Promo Banner inserted in the product grid ── */
 function PromoBanner({ promo }) {
+  const { t } = useLanguage()
+
   return (
     <div className="relative col-span-2 rounded-2xl overflow-hidden group cursor-pointer"
-      style={{ minHeight: '220px' }}>
+      dir="ltr" style={{ minHeight: '220px' }}>
       <img src={promo.img} alt={promo.title}
         className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" decoding="async" />
       <div className={`absolute inset-0 bg-gradient-to-br ${promo.gradient} opacity-75`} />
       <div className="relative z-10 flex flex-col justify-end h-full p-5 sm:p-7">
         <span className="inline-flex items-center gap-1.5 text-white/80 text-xs font-semibold uppercase tracking-wider mb-2">
-          <Sparkles className="w-3.5 h-3.5" /> Featured
+          <Sparkles className="w-3.5 h-3.5" /> {t('featured_products')}
         </span>
         <h3 className="text-xl sm:text-2xl font-bold text-white drop-shadow-lg mb-1" style={{ fontFamily: 'Georgia, serif' }}>
           {promo.title}
         </h3>
         <p className="text-white/70 text-sm">{promo.sub}</p>
         <span className="inline-flex items-center gap-1 text-white text-sm font-medium mt-3 group-hover:gap-2 transition-all">
-          Shop Now <ArrowRight className="w-4 h-4" />
+          {t('shop_now')} <ArrowRight className="w-4 h-4" />
         </span>
       </div>
     </div>
   )
 }
 
+const BANNER_CACHE_TTL = 60 * 60 * 1000 // 1 hour
+
+function readBannerCache(key) {
+  try {
+    const raw = localStorage.getItem(`banner_${key}`)
+    if (!raw) return undefined
+    const { data, ts } = JSON.parse(raw)
+    if (Date.now() - ts > BANNER_CACHE_TTL) { localStorage.removeItem(`banner_${key}`); return undefined }
+    return data
+  } catch { return undefined }
+}
+
+function writeBannerCache(key, data) {
+  try { localStorage.setItem(`banner_${key}`, JSON.stringify({ data, ts: Date.now() })) } catch {}
+}
+
 export default function CategoryPage() {
+  const { lang, t } = useLanguage()
   const { slug } = useParams()
   const [category, setCategory] = useState(null)
   const [products, setProducts] = useState([])
@@ -149,9 +217,11 @@ export default function CategoryPage() {
   const [loading, setLoading] = useState(true)
   const [sort, setSort] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
+  const [priceInput, setPriceInput] = useState('')
   const [filterOpen, setFilterOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
   const [customPromos, setCustomPromos] = useState(null)
+  const [customHero, setCustomHero] = useState(undefined)
 
   const theme = CATEGORY_THEMES[slug] || DEFAULT_THEME
 
@@ -159,11 +229,21 @@ export default function CategoryPage() {
     setSort('')
     setMaxPrice('')
     setCustomPromos(null)
+
     const slugKey = slug.replace(/-/g, '_')
+
+    // Show cached hero instantly — no flash, no wait
+    const cachedHero = readBannerCache(`hero_${slugKey}`)
+    setCustomHero(cachedHero !== undefined ? cachedHero : undefined)
+
     Promise.allSettled([
+      getBanner(`category_hero_${slugKey}`),
       getBanner(`category_promo_${slugKey}_1`),
       getBanner(`category_promo_${slugKey}_2`),
-    ]).then(([p1, p2]) => {
+    ]).then(([hero, p1, p2]) => {
+      const heroData = hero.value ?? null
+      writeBannerCache(`hero_${slugKey}`, heroData)
+      setCustomHero(heroData)
       if (p1.value || p2.value) {
         const themePromos = (CATEGORY_THEMES[slug] || DEFAULT_THEME).promos || []
         const merged = themePromos.map((def, i) => {
@@ -195,7 +275,7 @@ export default function CategoryPage() {
     }).catch(() => {}).finally(() => setLoading(false))
   }, [slug, sort, maxPrice])
 
-  const handleFilterApply = (newMaxPrice) => setMaxPrice(newMaxPrice)
+  const handleFilterApply = (val) => { setMaxPrice(val); setPriceInput(val) }
 
   const handleSort = (value) => {
     setSort(value)
@@ -203,16 +283,30 @@ export default function CategoryPage() {
   }
 
   const filtered = products
+  const heroOverride = customHero ? {
+    ...(customHero.img ? { poster: customHero.img } : {}),
+    ...(customHero.tagline ? { tagline: customHero.tagline } : {}),
+    ...(customHero.description ? { description: customHero.description } : {}),
+  } : {}
+  const localizedTheme = lang === 'ar' && CATEGORY_AR_COPY[slug]
+    ? { ...theme, ...CATEGORY_AR_COPY[slug], ...heroOverride }
+    : { ...theme, ...heroOverride }
 
   /* Insert promo banners at specific positions in the product grid */
   const renderProductGrid = () => {
     const items = []
-    const promos = customPromos ?? (theme.promos || [])
+    const sourcePromos = customPromos ?? (theme.promos || [])
+    const promos = lang === 'ar' && CATEGORY_AR_COPY[slug]
+      ? sourcePromos.map((promo, index) => ({
+          ...promo,
+          ...CATEGORY_AR_COPY[slug].promos[index],
+        }))
+      : sourcePromos
     let promoIndex = 0
     const promoPositions = [8, 20]
 
     filtered.forEach((p, i) => {
-      items.push(<ProductCard key={p.id} product={p} accentColor={theme.accentColor} />)
+      items.push(<ProductCard key={p.id} product={p} accentColor={theme.accentColor} priority={items.length < 6} />)
       if (promoPositions.includes(i + 1) && promoIndex < promos.length) {
         items.push(<PromoBanner key={`promo-${promoIndex}`} promo={promos[promoIndex]} />)
         promoIndex++
@@ -222,7 +316,8 @@ export default function CategoryPage() {
     return items
   }
 
-  const catName = category?.name || slug?.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || ''
+  const catName = t(slug?.replace(/-/g, '_')) || category?.name || ''
+  const displayDescription = localizedTheme.description
   const catDesc = category?.description || `Shop authentic ${catName} products in Kuwait. Same-day delivery. Free on orders over KD 10.`
   const catImage = theme.poster || '/images/luxury-perfumes.webp'
   const displayCount = total > 0 ? total : filtered.length
@@ -247,44 +342,46 @@ export default function CategoryPage() {
       />
 
       {/* ═══ HERO POSTER (matches HomePage poster style) ═══ */}
-      <section className="pt-4 sm:pt-6 pb-2">
+      <section className="pt-4 sm:pt-6 pb-2" dir="ltr">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           {/* Breadcrumb above poster */}
           <nav className="flex items-center gap-2 text-sm text-gray-400 mb-3 sm:mb-4">
-            <Link to="/" className="hover:text-gray-700 transition-colors">Home</Link>
+            <Link to="/" className="hover:text-gray-700 transition-colors">{t('home')}</Link>
             <span>/</span>
-            <span className="text-gray-700 font-medium">{category?.name || 'Category'}</span>
+            <span className="text-gray-700 font-medium">{catName || t('categories')}</span>
           </nav>
 
           {/* Poster card */}
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden group"
             style={{ minHeight: 'clamp(260px, 40vw, 360px)' }}>
-            <img src={theme.poster} alt={category?.name || ''}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-[1.02]"
-              loading="eager" fetchPriority="high" decoding="async" />
-            <div className={`absolute inset-0 bg-gradient-to-r ${theme.overlayGradient}`} />
+            {customHero !== undefined && (
+              <img src={localizedTheme.poster} alt={catName}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-[1.02]"
+                loading="eager" fetchPriority="high" decoding="async" />
+            )}
+            <div className={`absolute inset-0 bg-gradient-to-r ${localizedTheme.overlayGradient}`} />
 
             {/* Content */}
             <div className="absolute inset-0 flex items-center">
               <div className="px-5 sm:px-12 max-w-xl">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm text-white/80 text-[10px] sm:text-xs font-semibold mb-3 sm:mb-4 border border-white/10">
-                  <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> {category?.name || 'Collection'}
+                  <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> {localizedTheme.tagline || catName || t('collection')}
                 </div>
                 <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-white mb-2 leading-tight" style={{ fontFamily: 'Georgia, serif' }}>
-                  {category?.name}
+                  {catName}
                 </h1>
                 <p className="text-white/60 text-xs sm:text-sm mb-4 sm:mb-5 max-w-md">
-                  {theme.description}
+                  {displayDescription}
                 </p>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   <span className="bg-white/10 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10">
-                    {displayCount} Products
+                    {displayCount} {t('products')}
                   </span>
                   <span className="bg-white/10 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10">
-                    100% Authentic
+                    {t('authentic')}
                   </span>
                   <span className="bg-white/10 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10">
-                    Same-Day Delivery
+                    {t('same_day')}
                   </span>
                 </div>
               </div>
@@ -294,17 +391,17 @@ export default function CategoryPage() {
       </section>
 
       {/* ═══ QUICK CHIPS ═══ */}
-      {theme.chips.length > 0 && (
-        <section className={`bg-gradient-to-r ${theme.lightBg} border-b border-gray-100`}>
+      {localizedTheme.chips.length > 0 && (
+        <section dir="ltr" className={`bg-gradient-to-r ${localizedTheme.lightBg} border-b border-gray-100`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div className="flex gap-2 overflow-x-auto no-scrollbar">
-              {theme.chips.map(chip => (
+            <div className="flex gap-2 overflow-x-auto no-scrollbar w-full">
+              {localizedTheme.chips.map(chip => (
                 <span key={chip}
                   className="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold border cursor-pointer transition-all duration-200 hover:scale-105"
                   style={{
-                    borderColor: theme.accentColor + '40',
-                    color: theme.accentColor,
-                    backgroundColor: theme.accentColor + '08',
+                    borderColor: localizedTheme.accentColor + '40',
+                    color: localizedTheme.accentColor,
+                    backgroundColor: localizedTheme.accentColor + '08',
                   }}
                 >
                   {chip}
@@ -321,7 +418,7 @@ export default function CategoryPage() {
         <div className="flex items-center justify-between gap-3 mb-6">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm text-gray-500 mr-1">
-              {loading ? '' : `${displayCount} products`}
+              {loading ? '' : `${displayCount} ${t('products')}`}
             </span>
 
             <button
@@ -334,7 +431,7 @@ export default function CategoryPage() {
               }}
             >
               <SlidersHorizontal className="w-4 h-4" />
-              Filters
+              {t('filters')}
               {maxPrice && (
                 <span className="w-5 h-5 rounded-full text-white text-[10px] flex items-center justify-center"
                   style={{ backgroundColor: theme.accentColor }}>
@@ -359,7 +456,7 @@ export default function CategoryPage() {
               onClick={() => setSortOpen(!sortOpen)}
               className="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:border-gray-300 hover:shadow-md transition-all duration-200"
             >
-              {SORT_OPTIONS.find(o => o.value === sort)?.icon} {SORT_OPTIONS.find(o => o.value === sort)?.label || 'Sort'}
+              {t(sort === 'price_asc' ? 'price_low_high' : sort === 'price_desc' ? 'price_high_low' : sort === 'rating' ? 'top_rated' : 'sort_default')}
               <ChevronDown className={`w-4 h-4 transition-transform ${sortOpen ? 'rotate-180' : ''}`} />
             </button>
             {sortOpen && (
@@ -377,7 +474,7 @@ export default function CategoryPage() {
                       }`}
                       style={sort === opt.value ? { backgroundColor: theme.accentColor + '10', color: theme.accentColor } : {}}
                     >
-                      <span>{opt.icon}</span> {opt.label}
+                      <span>{opt.icon}</span> {t(opt.value === 'price_asc' ? 'price_low_high' : opt.value === 'price_desc' ? 'price_high_low' : opt.value === 'rating' ? 'top_rated' : 'sort_default')}
                     </button>
                   ))}
                 </div>
@@ -396,24 +493,32 @@ export default function CategoryPage() {
           >
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <SlidersHorizontal className="w-4 h-4" style={{ color: theme.accentColor }} />
-              Filters
+              {t('filters')}
             </h3>
             <div className="flex flex-wrap gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Max Price (KD)</label>
-                <div className="flex items-center gap-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('max_price')}</label>
+                <div className="flex items-center gap-2 flex-wrap">
                   <input
                     type="number"
+                    inputMode="decimal"
                     placeholder="e.g. 50"
-                    defaultValue={maxPrice}
-                    onBlur={e => handleFilterApply(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleFilterApply(e.target.value)}
+                    value={priceInput}
+                    onChange={e => setPriceInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleFilterApply(priceInput)}
                     className="w-32 border rounded-xl px-4 py-2.5 text-sm focus:outline-none transition-all"
                     style={{ borderColor: theme.accentColor + '40' }}
                   />
+                  <button
+                    onClick={() => handleFilterApply(priceInput)}
+                    className="px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all active:scale-95"
+                    style={{ backgroundColor: theme.accentColor }}
+                  >
+                    {t('apply') || 'Apply'}
+                  </button>
                   <button onClick={() => handleFilterApply('')}
                     className="text-xs text-gray-400 hover:text-red-500 transition-colors">
-                    Clear
+                    {t('clear')}
                   </button>
                 </div>
               </div>
@@ -428,9 +533,9 @@ export default function CategoryPage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-24">
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
-            <p className="text-gray-500 mb-6 text-sm">Try adjusting your filters or browse another category.</p>
-            <Link to="/" className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all active:scale-95">Back to Home</Link>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('no_products')}</h3>
+            <p className="text-gray-500 mb-6 text-sm">{t('adjust_filters')}</p>
+            <Link to="/" className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all active:scale-95">{t('back_home')}</Link>
           </div>
         ) : (
           <>
@@ -442,7 +547,7 @@ export default function CategoryPage() {
 
         {/* ═══ BOTTOM CTA BANNER ═══ */}
         {!loading && filtered.length > 0 && (
-          <section className="mt-10 rounded-3xl overflow-hidden relative" style={{ minHeight: '180px' }}>
+          <section dir="ltr" className="mt-10 rounded-3xl overflow-hidden relative" style={{ minHeight: '180px' }}>
             <div className={`absolute inset-0 bg-gradient-to-r ${theme.gradient}`} />
             <div className="absolute inset-0 overflow-hidden">
               <div className="absolute -top-10 -right-10 w-60 h-60 bg-white/10 rounded-full blur-xl" />
@@ -451,15 +556,15 @@ export default function CategoryPage() {
             <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between p-8 sm:p-10 gap-6">
               <div>
                 <span className="inline-flex items-center gap-1.5 text-white/70 text-xs font-semibold uppercase tracking-wider mb-2">
-                  <Star className="w-3.5 h-3.5 fill-white/50" /> Same-Day Delivery across Kuwait
+                  <Star className="w-3.5 h-3.5 fill-white/50" /> {t('same_day_announcement')}
                 </span>
                 <h3 className="text-xl sm:text-2xl font-bold text-white" style={{ fontFamily: 'Georgia, serif' }}>
-                  Can't find what you need?
+                  {t('cant_find')}
                 </h3>
-                <p className="text-white/60 text-sm mt-1">Chat with us and we'll help you find the perfect product.</p>
+                <p className="text-white/60 text-sm mt-1">{t('cant_find_sub')}</p>
               </div>
               <Link to="/" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-gray-900 px-6 py-3 rounded-full text-sm font-semibold hover:bg-gray-100 transition-all shadow-lg active:scale-95 hover:gap-3">
-                Browse All <ArrowRight className="w-4 h-4" />
+                {t('browse_all')} <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           </section>

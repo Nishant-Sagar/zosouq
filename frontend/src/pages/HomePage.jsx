@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, ArrowRight, Truck, Shield, RotateCcw, Headph
 import { getCategories, getProducts, getBanner } from '../api'
 import ProductCard from '../components/ProductCard'
 import SEO from '../components/SEO'
+import { useLanguage } from '../context/LanguageContext'
 
 /* ─── Hero Slides (Livish-style with big discount callouts) ─── */
 const HERO_SLIDES = [
@@ -69,19 +70,30 @@ const PRICE_RANGES = [
 
 /* ─── Quick-link bubbles (Livish-style extra categories) ─── */
 const QUICK_LINKS = [
-  { label: 'Deals',        link: '/category/perfumes',      img: '/images/deals.webp', badge: '%' },
-  { label: 'Best Sellers',  link: '/category/personal-care', img: '/images/repair-restore.webp' },
-  { label: 'New Arrivals',  link: '/category/makeup',        img: '/images/lip-collection.webp' },
-  { label: 'Summer Sale',   link: '/category/body-care',     img: '/images/summer-sale.webp', badge: '%' },
-  { label: 'Top Perfumes',  link: '/category/perfumes',      img: '/images/top-perfumes.webp' },
-  { label: 'Hair Care',     link: '/category/hair-care',     img: '/images/hair-care-quick.webp' },
+  { labelKey: 'deals',         link: '/category/perfumes',      img: '/images/deals.webp', badge: '%' },
+  { labelKey: 'best_sellers',  link: '/category/personal-care', img: '/images/repair-restore.webp' },
+  { labelKey: 'new_arrivals',  link: '/category/makeup',        img: '/images/lip-collection.webp' },
+  { labelKey: 'summer_sale',   link: '/category/body-care',     img: '/images/summer-sale.webp', badge: '%' },
+  { labelKey: 'top_perfumes',  link: '/category/perfumes',      img: '/images/top-perfumes.webp' },
+  { labelKey: 'hair_care',     link: '/category/hair-care',     img: '/images/hair-care-quick.webp' },
 ]
 
 const PERKS = [
-  { icon: Zap,        title: 'Same-Day Delivery', sub: 'Free over KD 10',    color: 'text-white', iconBg: 'bg-emerald-500', cardBg: 'bg-gradient-to-br from-emerald-50 to-teal-100', border: 'border-emerald-200', accent: 'text-emerald-700' },
-  { icon: Shield,     title: '100% Authentic',  sub: 'Verified products',    color: 'text-white', iconBg: 'bg-blue-500',    cardBg: 'bg-gradient-to-br from-blue-50 to-indigo-100',   border: 'border-blue-200',    accent: 'text-blue-700' },
-  { icon: RotateCcw,  title: 'Easy Returns',    sub: '14-day hassle-free',   color: 'text-white', iconBg: 'bg-amber-500',   cardBg: 'bg-gradient-to-br from-amber-50 to-orange-100',  border: 'border-amber-200',   accent: 'text-amber-700' },
-  { icon: Headphones, title: '24/7 Support',    sub: 'We are here to help',  color: 'text-white', iconBg: 'bg-purple-500',  cardBg: 'bg-gradient-to-br from-purple-50 to-violet-100', border: 'border-purple-200',  accent: 'text-purple-700' },
+  { icon: Zap,        titleKey: 'same_day',     subKey: 'free_over_10',       color: 'text-white', iconBg: 'bg-emerald-500', cardBg: 'bg-gradient-to-br from-emerald-50 to-teal-100', border: 'border-emerald-200', accent: 'text-emerald-700' },
+  { icon: Shield,     titleKey: 'authentic',    subKey: 'verified_products', color: 'text-white', iconBg: 'bg-blue-500',    cardBg: 'bg-gradient-to-br from-blue-50 to-indigo-100',   border: 'border-blue-200',    accent: 'text-blue-700' },
+  { icon: RotateCcw,  titleKey: 'easy_returns', subKey: 'easy_returns_sub',   color: 'text-white', iconBg: 'bg-amber-500',   cardBg: 'bg-gradient-to-br from-amber-50 to-orange-100',  border: 'border-amber-200',   accent: 'text-amber-700' },
+  { icon: Headphones, titleKey: 'support_24_7', subKey: 'support_sub',        color: 'text-white', iconBg: 'bg-purple-500',  cardBg: 'bg-gradient-to-br from-purple-50 to-violet-100', border: 'border-purple-200',  accent: 'text-purple-700' },
+]
+
+const HERO_TRANSLATION_KEYS = [
+  { title: 'luxury_perfumes', subtitle: 'luxury_perfumes_sub', badge: 'exclusively_zosouq' },
+  { title: 'premium_makeup', subtitle: 'premium_makeup_sub', badge: 'new_collection' },
+  { title: 'body_care_essentials', subtitle: 'body_care_essentials_sub', badge: 'best_sellers' },
+]
+
+const SALE_POSTER_TRANSLATION_KEYS = [
+  { badgeText: 'up_to_70_off', eyebrow: 'exclusive_deals', title: 'perfume_sale_title', cta: 'shop_the_sale' },
+  { badgeText: 'new_season', eyebrow: 'fresh_arrivals', title: 'hair_care_essentials', cta: 'browse_collection' },
 ]
 
 const BADGE_COLORS = {
@@ -118,10 +130,27 @@ const DEFAULT_DELIVERY_BANNER = {
   tags: 'All Kuwait Areas,Same-Day Delivery,Cash on Delivery',
 }
 
+const DEFAULT_EXCLUSIVE_BANNER = {
+  img: '/images/exclusive-collection.webp',
+  title: 'Luxury Perfumes\nUnder One Roof',
+  description: 'Authentic fragrances from Arabian and international brands.',
+  cta: 'Explore Collection',
+  link: '/category/perfumes',
+}
+
+const DEFAULT_FLASH_SALE_BANNER = {
+  img: '/images/makeup-collection.webp',
+  title: 'Up to 50% Off\nPremium Makeup',
+  description: 'Limited time only. Foundation, lipstick, eyeshadow and more.',
+  cta: 'Shop Now',
+  link: '/category/makeup',
+}
+
 /* ────────────────────────────────────────────────────────
    Product Carousel (with arrows like Livish)
    ──────────────────────────────────────────────────────── */
-function ProductCarousel({ title, subtitle, linkTo, products, loading, accentColor, bg }) {
+function ProductCarousel({ title, subtitle, linkTo, products, loading, accentColor, bg, priorityCount = 0 }) {
+  const { t } = useLanguage()
   const ref = useRef(null)
   const [canL, setCanL] = useState(false)
   const [canR, setCanR] = useState(true)
@@ -145,7 +174,7 @@ function ProductCarousel({ title, subtitle, linkTo, products, loading, accentCol
           </div>
           {linkTo && (
             <Link to={linkTo} className="px-5 py-2 rounded-xl border-2 border-gray-800 text-sm font-semibold text-gray-800 hover:bg-gray-800 hover:text-white transition-all duration-300">
-              Show All
+              {t('show_all')}
             </Link>
           )}
         </div>
@@ -165,9 +194,9 @@ function ProductCarousel({ title, subtitle, linkTo, products, loading, accentCol
                     <div className="mt-3 space-y-2"><div className="h-3 bg-gray-100 rounded w-4/5" /><div className="h-4 bg-gray-100 rounded w-1/2" /></div>
                   </div>
                 ))
-              : products.map(p => (
+              : products.map((p, i) => (
                   <div key={p.id} className="flex-shrink-0 w-[180px] sm:w-[220px]">
-                    <ProductCard product={p} accentColor={accentColor} />
+                    <ProductCard product={p} accentColor={accentColor} priority={i < priorityCount} />
                   </div>
                 ))
             }
@@ -188,6 +217,7 @@ function ProductCarousel({ title, subtitle, linkTo, products, loading, accentCol
    H O M E   P A G E  (Livish-inspired)
    ═══════════════════════════════════════════════════════ */
 export default function HomePage() {
+  const { lang, t } = useLanguage()
   const [categories, setCategories]     = useState([])
   const [featured, setFeatured]         = useState([])
   const [newArrivals, setNewArrivals]   = useState([])
@@ -201,6 +231,9 @@ export default function HomePage() {
   const [salePoster1, setSalePoster1]         = useState(DEFAULT_SALE_POSTER_1)
   const [salePoster2, setSalePoster2]         = useState(DEFAULT_SALE_POSTER_2)
   const [deliveryBanner, setDeliveryBanner]   = useState(DEFAULT_DELIVERY_BANNER)
+  const [bannersReady, setBannersReady]       = useState(false)
+  const [exclusiveBanner, setExclusiveBanner] = useState(DEFAULT_EXCLUSIVE_BANNER)
+  const [flashSaleBanner, setFlashSaleBanner] = useState(DEFAULT_FLASH_SALE_BANNER)
 
   useEffect(() => {
     Promise.all([
@@ -216,6 +249,21 @@ export default function HomePage() {
   }, [])
 
   useEffect(() => {
+    const CACHE_KEY = 'zosouq_banners_v3'
+    const cached = sessionStorage.getItem(CACHE_KEY)
+    if (cached) {
+      try {
+        const { slides, poster1, poster2, delivery, exclusive, flashSale } = JSON.parse(cached)
+        if (slides) setHeroSlides(slides)
+        if (poster1) setSalePoster1(poster1)
+        if (poster2) setSalePoster2(poster2)
+        if (delivery) setDeliveryBanner(delivery)
+        if (exclusive) setExclusiveBanner(exclusive)
+        if (flashSale) setFlashSaleBanner(flashSale)
+        setBannersReady(true)
+        return
+      } catch {}
+    }
     Promise.allSettled([
       getBanner('home_hero_slide_1'),
       getBanner('home_hero_slide_2'),
@@ -223,15 +271,19 @@ export default function HomePage() {
       getBanner('home_sale_poster_1'),
       getBanner('home_sale_poster_2'),
       getBanner('home_delivery_banner'),
-    ]).then(([s1, s2, s3, p1, p2, del]) => {
-      const slides = HERO_SLIDES.map((def, i) => {
-        const val = [s1.value, s2.value, s3.value][i]
-        return val ? { ...def, ...val } : def
-      })
-      setHeroSlides(slides)
-      if (p1.value) setSalePoster1(prev => ({ ...prev, ...p1.value }))
-      if (p2.value) setSalePoster2(prev => ({ ...prev, ...p2.value }))
-      if (del.value) setDeliveryBanner(prev => ({ ...prev, ...del.value }))
+      getBanner('home_exclusive_banner'),
+      getBanner('home_flash_sale_banner'),
+    ]).then(([s1, s2, s3, p1, p2, del, exc, flash]) => {
+      const slides    = HERO_SLIDES.map((def, i) => { const val = [s1.value, s2.value, s3.value][i]; return val ? { ...def, ...val } : def })
+      const poster1   = p1.value   ? { ...DEFAULT_SALE_POSTER_1,    ...p1.value   } : DEFAULT_SALE_POSTER_1
+      const poster2   = p2.value   ? { ...DEFAULT_SALE_POSTER_2,    ...p2.value   } : DEFAULT_SALE_POSTER_2
+      const delivery  = del.value  ? { ...DEFAULT_DELIVERY_BANNER,  ...del.value  } : DEFAULT_DELIVERY_BANNER
+      const exclusive = exc.value  ? { ...DEFAULT_EXCLUSIVE_BANNER, ...exc.value  } : DEFAULT_EXCLUSIVE_BANNER
+      const flashSale = flash.value? { ...DEFAULT_FLASH_SALE_BANNER,...flash.value} : DEFAULT_FLASH_SALE_BANNER
+      setHeroSlides(slides); setSalePoster1(poster1); setSalePoster2(poster2)
+      setDeliveryBanner(delivery); setExclusiveBanner(exclusive); setFlashSaleBanner(flashSale)
+      setBannersReady(true)
+      try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ slides, poster1, poster2, delivery, exclusive, flashSale })) } catch {}
     })
   }, [])
 
@@ -268,6 +320,57 @@ export default function HomePage() {
     { '@context': 'https://schema.org', '@type': 'SiteNavigationElement', name: 'Personal Care', url: 'https://www.zosouq.com/category/personal-care' },
   ]
 
+  const localizeHeroSlide = (slideData, index) => {
+    if (lang !== 'ar') return slideData
+    const keys = HERO_TRANSLATION_KEYS[index]
+    return {
+      ...slideData,
+      title: t(keys.title),
+      subtitle: t(keys.subtitle),
+      badge: t(keys.badge),
+      cta: t('shop_now'),
+    }
+  }
+
+  const localizeSalePoster = (poster, index) => {
+    if (lang !== 'ar') return poster
+    const keys = SALE_POSTER_TRANSLATION_KEYS[index]
+    return {
+      ...poster,
+      badgeText: t(keys.badgeText),
+      eyebrow: t(keys.eyebrow),
+      title: t(keys.title),
+      cta: t(keys.cta),
+    }
+  }
+
+  const localizedDeliveryBanner = lang === 'ar'
+    ? {
+        ...deliveryBanner,
+        title: t('delivery_banner_title'),
+        description: t('delivery_banner_description'),
+        tags: [t('all_kuwait_areas'), t('same_day'), t('cash_on_delivery')].join(','),
+      }
+    : deliveryBanner
+
+  const localizedExclusiveBanner = lang === 'ar'
+    ? {
+        ...exclusiveBanner,
+        title: t('luxury_under_one_roof'),
+        description: t('authentic_fragrances'),
+        cta: t('explore_collection'),
+      }
+    : exclusiveBanner
+
+  const localizedFlashSaleBanner = lang === 'ar'
+    ? {
+        ...flashSaleBanner,
+        title: t('makeup_sale_title'),
+        description: t('makeup_sale_description'),
+        cta: t('shop_now'),
+      }
+    : flashSaleBanner
+
   return (
     <div className="bg-white">
       <SEO
@@ -279,12 +382,17 @@ export default function HomePage() {
       {/* ════════════════════════════════════════════════
           HERO CAROUSEL  (Livish-style with discount badge)
           ════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden bg-white">
+      <section className="relative overflow-hidden bg-white" dir="ltr">
         <div className="max-w-[1600px] mx-auto px-3 sm:px-6 py-3 sm:py-5">
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl" style={{ height: 'clamp(260px, 38vw, 400px)' }}>
-            {heroSlides.map((s, i) => (
+            {!bannersReady && (
+              <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+            )}
+            {bannersReady && heroSlides.map((slideData, i) => {
+              const s = localizeHeroSlide(slideData, i)
+              return (
               <div key={i} className="absolute inset-0 transition-all duration-[1200ms] ease-in-out"
-                style={{ opacity: i === slide ? 1 : 0, transform: i === slide ? 'scale(1)' : 'scale(1.04)' }}>
+                style={{ opacity: i === slide ? 1 : 0, transform: i === slide ? 'scale(1)' : 'scale(1.04)', pointerEvents: i === slide ? 'auto' : 'none' }}>
                 <img src={s.img} alt={s.title} className="absolute inset-0 w-full h-full object-cover" loading={i === 0 ? 'eager' : 'lazy'} />
                 <div className={`absolute inset-0 bg-gradient-to-r ${s.gradient}`} />
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-950/50 via-transparent to-transparent" />
@@ -303,7 +411,7 @@ export default function HomePage() {
                         <span className={`text-5xl sm:text-7xl lg:text-8xl font-black leading-none tracking-tighter ${s.accentColor} drop-shadow-lg`}>{s.discount}</span>
                         <div className="mb-0.5 sm:mb-1">
                           <span className={`text-xl sm:text-3xl font-bold ${s.accentColor}`}>%</span>
-                          <span className="block text-[10px] sm:text-sm font-bold text-white/80 uppercase tracking-wider">OFF</span>
+                          <span className="block text-[10px] sm:text-sm font-bold text-white/80 uppercase tracking-wider">{t('off')}</span>
                         </div>
                       </div>
                       <Link to={s.link}
@@ -314,14 +422,16 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-            ))}
+              )
+            })}
 
-            {/* Nav arrows */}
-            <button onClick={() => setSlide(s => (s - 1 + HERO_SLIDES.length) % HERO_SLIDES.length)}
+            {/* Nav arrows — only show when banners ready */}
+
+            <button onClick={() => setSlide(s => (s - 1 + heroSlides.length) % heroSlides.length)}
               className="absolute left-1 sm:left-5 top-1/2 -translate-y-1/2 z-10 w-7 h-7 sm:w-10 sm:h-10 bg-black/15 sm:bg-white/20 backdrop-blur-sm sm:backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/40 transition border border-white/5 sm:border-white/10 sm:shadow-md">
               <ChevronLeft className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white/70 sm:text-white" />
             </button>
-            <button onClick={() => setSlide(s => (s + 1) % HERO_SLIDES.length)}
+            <button onClick={() => setSlide(s => (s + 1) % heroSlides.length)}
               className="absolute right-1 sm:right-5 top-1/2 -translate-y-1/2 z-10 w-7 h-7 sm:w-10 sm:h-10 bg-black/15 sm:bg-white/20 backdrop-blur-sm sm:backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/40 transition border border-white/5 sm:border-white/10 sm:shadow-md">
               <ChevronRight className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white/70 sm:text-white" />
             </button>
@@ -344,16 +454,16 @@ export default function HomePage() {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <div className="flex gap-6 sm:gap-10 overflow-x-auto no-scrollbar sm:justify-center py-2 px-2">
             {QUICK_LINKS.map((ql) => (
-              <Link key={ql.label} to={ql.link} className="group flex flex-col items-center gap-2 flex-shrink-0">
+              <Link key={ql.labelKey} to={ql.link} className="group flex flex-col items-center gap-2 flex-shrink-0">
                 <div className="relative w-[72px] h-[72px] sm:w-[100px] sm:h-[100px] rounded-full overflow-hidden ring-2 ring-gray-200 group-hover:ring-rose-400 transition-all duration-300 shadow-md group-hover:shadow-xl bg-white">
-                  <img src={ql.img} alt={ql.label} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+                  <img src={ql.img} alt={t(ql.labelKey)} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
                   {ql.badge && (
                     <div className="absolute top-0 right-0 w-6 h-6 sm:w-7 sm:h-7 bg-red-500 rounded-full flex items-center justify-center shadow-lg">
                       <Percent className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
                     </div>
                   )}
                 </div>
-                <span className="text-xs sm:text-sm font-medium text-gray-700 text-center group-hover:text-rose-600 transition-colors">{ql.label}</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-700 text-center group-hover:text-rose-600 transition-colors">{t(ql.labelKey)}</span>
               </Link>
             ))}
           </div>
@@ -366,20 +476,21 @@ export default function HomePage() {
       <section className="pt-4 pb-8 sm:pt-6 sm:pb-12 bg-gradient-to-b from-rose-50/80 via-white to-violet-50/60">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <div className="text-center mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Shop by Category</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{t('shop_by_category')}</h2>
           </div>
           {/* Mobile: horizontal scroll. Desktop: centered flex */}
           <div className="flex sm:justify-center gap-6 sm:gap-12 overflow-x-auto no-scrollbar py-4 px-3">
             {categories.map(cat => {
               const vis = CATEGORY_CIRCLES[cat.slug] || { img: '', bg: 'bg-gray-50', ring: 'ring-gray-200' }
+              const categoryName = t(cat.slug.replace(/-/g, '_'))
               return (
                 <Link key={cat.id} to={`/category/${cat.slug}`}
                   className="group flex flex-col items-center gap-2.5 flex-shrink-0 min-w-[72px]">
                   <div className={`relative w-[72px] h-[72px] sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full overflow-hidden ring-[3px] sm:ring-4 ${vis.ring} shadow-lg group-hover:shadow-2xl transition-all duration-400 ${vis.bg}`}>
-                    <img src={vis.img} alt={cat.name}
+                    <img src={vis.img} alt={categoryName}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
                   </div>
-                  <span className="text-xs sm:text-sm font-semibold text-gray-800 group-hover:text-rose-600 transition-colors text-center leading-tight">{cat.name}</span>
+                  <span className="text-xs sm:text-sm font-semibold text-gray-800 group-hover:text-rose-600 transition-colors text-center leading-tight">{categoryName}</span>
                 </Link>
               )
             })}
@@ -393,14 +504,14 @@ export default function HomePage() {
       <section className="py-3 sm:py-4 bg-gradient-to-r from-rose-50/60 via-white to-violet-50/60 border-y border-gray-100">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <div className="flex overflow-x-auto no-scrollbar gap-2 sm:gap-3">
-            {PERKS.map(({ icon: Icon, title, sub, color, iconBg, cardBg, border, accent }) => (
-              <div key={title} className={`${cardBg} ${border} border rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 flex items-center gap-2.5 flex-1 min-w-[160px] group hover:shadow-md transition-all duration-300`}>
+            {PERKS.map(({ icon: Icon, titleKey, subKey, color, iconBg, cardBg, border, accent }) => (
+              <div key={titleKey} className={`${cardBg} ${border} border rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 flex items-center gap-2.5 flex-1 min-w-[160px] group hover:shadow-md transition-all duration-300`}>
                 <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg} shadow-sm transition-transform duration-300 group-hover:scale-110`}>
                   <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${color}`} />
                 </div>
                 <div className="min-w-0">
-                  <p className={`text-xs sm:text-sm font-bold ${accent} truncate`}>{title}</p>
-                  <p className="text-[10px] sm:text-xs text-gray-500 truncate">{sub}</p>
+                  <p className={`text-xs sm:text-sm font-bold ${accent} truncate`}>{t(titleKey)}</p>
+                  <p className="text-[10px] sm:text-xs text-gray-500 truncate">{t(subKey)}</p>
                 </div>
               </div>
             ))}
@@ -412,13 +523,14 @@ export default function HomePage() {
           BEST SELLERS  (carousel)
           ════════════════════════════════════════════════ */}
       <ProductCarousel
-        title="Best Sellers"
-        subtitle="Most loved by our customers"
+        title={t('best_sellers')}
+        subtitle={t('most_loved')}
         linkTo="/category/personal-care"
         products={featured}
         loading={loading}
         accentColor="#e11d48"
         bg="bg-gradient-to-b from-rose-50/50 via-white to-violet-50/30"
+        priorityCount={4}
       />
 
       {/* ════════════════════════════════════════════════
@@ -426,7 +538,7 @@ export default function HomePage() {
           ════════════════════════════════════════════════ */}
       <section className="pt-0 pb-6 sm:pt-0 sm:pb-8 bg-gradient-to-b from-violet-50/40 via-white to-amber-50/30">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Shop by Price</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">{t('shop_by_price')}</h2>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-4">
             {PRICE_RANGES.map(pr => (
               <Link key={pr.label} to={`/search?max_price=${pr.max}`}
@@ -435,9 +547,9 @@ export default function HomePage() {
                 {/* Subtle texture pattern */}
                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 20px)' }} />
                 <div className="relative z-10 text-center text-white">
-                  <p className="text-xs sm:text-sm font-semibold opacity-90 tracking-wider uppercase">Under</p>
+                  <p className="text-xs sm:text-sm font-semibold opacity-90 tracking-wider uppercase">{t('under')}</p>
                   <p className="text-3xl sm:text-4xl lg:text-5xl font-black leading-none my-1">{pr.label}</p>
-                  <p className="text-xs sm:text-sm font-bold tracking-widest">KWD</p>
+                  <p className="text-xs sm:text-sm font-bold tracking-widest">{t('kd')}</p>
                 </div>
               </Link>
             ))}
@@ -448,10 +560,12 @@ export default function HomePage() {
       {/* ════════════════════════════════════════════════
           SALE POSTERS — Two-column (Livish-style promo)
           ════════════════════════════════════════════════ */}
-      <section className="py-4 sm:py-6">
+      <section className="py-4 sm:py-6" dir="ltr">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[salePoster1, salePoster2].map((poster, idx) => (
+            {[salePoster1, salePoster2].map((posterData, idx) => {
+              const poster = localizeSalePoster(posterData, idx)
+              return (
               <Link key={idx} to={poster.link}
                 className="group relative rounded-2xl overflow-hidden flex items-end" style={{ minHeight: '200px' }}>
                 <img src={poster.img} alt={poster.title}
@@ -477,7 +591,8 @@ export default function HomePage() {
                   </span>
                 </div>
               </Link>
-            ))}
+              )
+            })}
           </div>
         </div>
       </section>
@@ -486,8 +601,8 @@ export default function HomePage() {
           NEW ARRIVALS (carousel)
           ════════════════════════════════════════════════ */}
       <ProductCarousel
-        title="New Arrivals"
-        subtitle="The latest additions to our collection"
+        title={t('new_arrivals')}
+        subtitle={t('latest_additions')}
         linkTo="/category/makeup"
         products={newArrivals}
         loading={loading}
@@ -498,10 +613,10 @@ export default function HomePage() {
       {/* ════════════════════════════════════════════════
           FREE DELIVERY POSTER (Full-width banner)
           ════════════════════════════════════════════════ */}
-      <section className="py-6 sm:py-8">
+      <section className="py-6 sm:py-8" dir="ltr">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
-          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden group" style={{ minHeight: 'clamp(280px, 45vw, 340px)' }}>
-            <img src={deliveryBanner.img} alt={deliveryBanner.title}
+          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden group" style={{ minHeight: 'clamp(280px, 40vw, 380px)' }}>
+            <img src={localizedDeliveryBanner.img} alt={localizedDeliveryBanner.title}
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-[1.02]" loading="lazy" decoding="async" />
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/90 via-emerald-900/70 to-emerald-900/40" />
             <div className="absolute inset-0 flex items-center">
@@ -518,13 +633,13 @@ export default function HomePage() {
                   </div>
                 </div>
                 <h2 className="text-xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 leading-tight">
-                  {deliveryBanner.title.split('\n').map((line, i, arr) => (
+                  {localizedDeliveryBanner.title.split('\n').map((line, i, arr) => (
                     <span key={i}>{line}{i < arr.length - 1 && <br/>}</span>
                   ))}
                 </h2>
-                <p className="text-white/60 text-xs sm:text-sm mb-4 sm:mb-5">{deliveryBanner.description}</p>
+                <p className="text-white/60 text-xs sm:text-sm mb-4 sm:mb-5">{localizedDeliveryBanner.description}</p>
                 <div className="flex flex-wrap gap-2">
-                  {(deliveryBanner.tags || '').split(',').map(t => t.trim()).filter(Boolean).map(tag => (
+                  {(localizedDeliveryBanner.tags || '').split(',').map(t => t.trim()).filter(Boolean).map(tag => (
                     <span key={tag} className="bg-white/10 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10">{tag}</span>
                   ))}
                 </div>
@@ -538,8 +653,8 @@ export default function HomePage() {
           TOP SELLING PERFUMES  (Livish-style section)
           ════════════════════════════════════════════════ */}
       <ProductCarousel
-        title="Top Selling Perfumes"
-        subtitle="Most popular fragrances in Kuwait"
+        title={t('top_selling_perfumes')}
+        subtitle={t('popular_fragrances')}
         linkTo="/category/perfumes"
         products={topPerfumes}
         loading={loading}
@@ -550,25 +665,27 @@ export default function HomePage() {
       {/* ════════════════════════════════════════════════
           EXCLUSIVE COLLECTION POSTER
           ════════════════════════════════════════════════ */}
-      <section className="py-4 sm:py-6">
+      <section className="py-4 sm:py-6" dir="ltr">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden group" style={{ minHeight: 'clamp(280px, 40vw, 380px)' }}>
-            <img src="/images/exclusive-collection.webp"
-              alt="Exclusive perfume collection"
+            <img src={localizedExclusiveBanner.img}
+              alt={localizedExclusiveBanner.title}
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-[1.03]" loading="lazy" decoding="async" />
             <div className="absolute inset-0 bg-gradient-to-r from-gray-950/90 via-gray-950/60 to-gray-950/30" />
             <div className="absolute inset-0 flex items-center">
               <div className="px-5 sm:px-12 max-w-lg">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm text-white/80 text-[10px] sm:text-xs font-semibold mb-3 sm:mb-4 border border-white/10">
-                  <Award className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Exclusive Collection
+                  <Award className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> {t('exclusive_collection')}
                 </div>
                 <h2 className="text-xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 leading-tight">
-                  Luxury Perfumes<br/>Under One Roof
+                  {localizedExclusiveBanner.title.split('\n').map((line, i, arr) => (
+                    <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
+                  ))}
                 </h2>
-                <p className="text-white/60 text-xs sm:text-sm mb-4 sm:mb-5">Authentic fragrances from Arabian and international brands.</p>
-                <Link to="/category/perfumes"
+                <p className="text-white/60 text-xs sm:text-sm mb-4 sm:mb-5">{localizedExclusiveBanner.description}</p>
+                <Link to={localizedExclusiveBanner.link || '/category/perfumes'}
                   className="inline-flex items-center gap-2 bg-white text-gray-900 px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold hover:bg-gray-100 transition-all shadow-lg hover:gap-3 active:scale-95">
-                  Explore Collection <ArrowRight className="w-4 h-4" />
+                  {localizedExclusiveBanner.cta} <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
             </div>
@@ -580,8 +697,8 @@ export default function HomePage() {
           TRENDING NOW (carousel)
           ════════════════════════════════════════════════ */}
       <ProductCarousel
-        title="Trending Now"
-        subtitle="What everyone is adding to their cart"
+        title={t('trending_now')}
+        subtitle={t('trending_sub')}
         linkTo="/category/perfumes"
         products={trending}
         loading={loading}
@@ -592,24 +709,26 @@ export default function HomePage() {
       {/* ════════════════════════════════════════════════
           MEGA SALE POSTER  (3-column grid)
           ════════════════════════════════════════════════ */}
-      <section className="py-6 sm:py-8">
+      <section className="py-6 sm:py-8" dir="ltr">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 gap-4">
             {/* Big Sale Card */}
-            <Link to="/category/makeup" className="group relative rounded-2xl overflow-hidden flex items-center" style={{ minHeight: 'clamp(220px, 35vw, 280px)' }}>
-              <img src="/images/makeup-collection.webp" alt="Makeup sale"
+            <Link to={localizedFlashSaleBanner.link || '/category/makeup'} className="group relative rounded-2xl overflow-hidden flex items-center" style={{ minHeight: 'clamp(280px, 40vw, 380px)' }}>
+              <img src={localizedFlashSaleBanner.img} alt={localizedFlashSaleBanner.title}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" decoding="async" />
               <div className="absolute inset-0 bg-gradient-to-r from-rose-900/90 via-rose-900/60 to-rose-900/20" />
               <div className="relative z-10 p-5 sm:p-10">
                 <div className="bg-red-600 text-white px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold inline-flex items-center gap-1 sm:gap-1.5 mb-2 sm:mb-3 shadow-md">
-                  <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> FLASH SALE
+                  <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> {t('flash_sale')}
                 </div>
                 <h3 className="text-xl sm:text-3xl font-bold text-white mb-1 leading-tight">
-                  Up to 50% Off<br/>Premium Makeup
+                  {localizedFlashSaleBanner.title.split('\n').map((line, i, arr) => (
+                    <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
+                  ))}
                 </h3>
-                <p className="text-white/50 text-xs sm:text-sm mb-3 sm:mb-4 max-w-sm">Limited time only. Foundation, lipstick, eyeshadow and more.</p>
+                <p className="text-white/50 text-xs sm:text-sm mb-3 sm:mb-4 max-w-sm">{localizedFlashSaleBanner.description}</p>
                 <span className="inline-flex items-center gap-2 bg-white text-gray-900 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold hover:bg-gray-100 transition-all shadow-lg group-hover:gap-3">
-                  Shop Now <ArrowRight className="w-4 h-4" />
+                  {localizedFlashSaleBanner.cta} <ArrowRight className="w-4 h-4" />
                 </span>
               </div>
             </Link>
@@ -625,12 +744,12 @@ export default function HomePage() {
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-100 text-red-600 text-xs font-bold mb-2">
-                <Zap className="w-3.5 h-3.5" /> Limited Time Offers
+                <Zap className="w-3.5 h-3.5" /> {t('limited_time_offers')}
               </div>
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">This Week's Deals</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{t('this_weeks_deals')}</h2>
             </div>
             <Link to="/category/body-care" className="px-5 py-2 rounded-xl border-2 border-gray-800 text-sm font-semibold text-gray-800 hover:bg-gray-800 hover:text-white transition-all duration-300">
-              Show All
+              {t('show_all')}
             </Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -653,7 +772,7 @@ export default function HomePage() {
       <section className="pt-6 pb-8 sm:pt-8 sm:pb-12 bg-gradient-to-b from-rose-50/50 via-white to-violet-50/40">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Handpicked For You</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{t('handpicked_for_you')}</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             {loading
