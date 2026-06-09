@@ -1,8 +1,9 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { SlidersHorizontal, ChevronDown, X, Sparkles, ArrowRight, Star } from 'lucide-react'
-import { getCategory, getProducts, getProductCount, getBanner } from '../api'
+import { SlidersHorizontal, Sparkles, ArrowRight, Star } from 'lucide-react'
+import { getCategory, getProducts, getBanner } from '../api'
 import ProductCard from '../components/ProductCard'
+import FilterDrawer from '../components/FilterDrawer'
 import SEO from '../components/SEO'
 import { useLanguage } from '../context/LanguageContext'
 
@@ -208,34 +209,37 @@ function writeBannerCache(key, data) {
   try { localStorage.setItem(`banner_${key}`, JSON.stringify({ data, ts: Date.now() })) } catch {}
 }
 
+function getDiscount(p) {
+  if (!p.original_price || p.original_price <= p.price) return 0
+  return Math.round(((p.original_price - p.price) / p.original_price) * 100)
+}
+
 export default function CategoryPage() {
   const { lang, t } = useLanguage()
   const { slug } = useParams()
   const [category, setCategory] = useState(null)
   const [products, setProducts] = useState([])
-  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [sort, setSort] = useState('')
-  const [maxPrice, setMaxPrice] = useState('')
-  const [priceInput, setPriceInput] = useState('')
   const [filterOpen, setFilterOpen] = useState(false)
-  const [sortOpen, setSortOpen] = useState(false)
   const [customPromos, setCustomPromos] = useState(null)
   const [customHero, setCustomHero] = useState(undefined)
 
+  // Applied filter values
+  const [appliedBrands,      setAppliedBrands]      = useState([])
+  const [appliedMinPrice,    setAppliedMinPrice]    = useState('')
+  const [appliedMaxPrice,    setAppliedMaxPrice]    = useState('')
+  const [appliedSort,        setAppliedSort]        = useState('')
+  const [appliedMinDiscount, setAppliedMinDiscount] = useState(1)
+
   const theme = CATEGORY_THEMES[slug] || DEFAULT_THEME
 
+  // Reset filters when category changes
   useEffect(() => {
-    setSort('')
-    setMaxPrice('')
+    setAppliedBrands([]); setAppliedMinPrice(''); setAppliedMaxPrice(''); setAppliedSort(''); setAppliedMinDiscount(1)
     setCustomPromos(null)
-
     const slugKey = slug.replace(/-/g, '_')
-
-    // Show cached hero instantly — no flash, no wait
     const cachedHero = readBannerCache(`hero_${slugKey}`)
     setCustomHero(cachedHero !== undefined ? cachedHero : undefined)
-
     Promise.allSettled([
       getBanner(`category_hero_${slugKey}`),
       getBanner(`category_promo_${slugKey}_1`),
@@ -255,34 +259,46 @@ export default function CategoryPage() {
     })
   }, [slug])
 
+  // Fetch all products for this category once
   useEffect(() => {
     setLoading(true)
     window.scrollTo(0, 0)
-    const params = { category_slug: slug, limit: 2000 }
-    if (maxPrice) params.max_price = parseFloat(maxPrice)
-    if (sort === 'price_asc') params.sort = 'price_asc'
-    else if (sort === 'price_desc') params.sort = 'price_desc'
-
     Promise.all([
       getCategory(slug),
-      getProducts(params),
+      getProducts({ category_slug: slug, limit: 2000 }),
     ]).then(([cat, prods]) => {
       if (cat) setCategory(cat)
-      let sorted = [...prods]
-      if (sort === 'rating') sorted.sort((a, b) => b.rating - a.rating)
-      setProducts(sorted)
-      setTotal(sorted.length)
+      setProducts(prods || [])
     }).catch(() => {}).finally(() => setLoading(false))
-  }, [slug, sort, maxPrice])
+  }, [slug])
 
-  const handleFilterApply = (val) => { setMaxPrice(val); setPriceInput(val) }
+  // Extract brands from loaded products
+  const brands = useMemo(() => {
+    const set = new Set(products.map(p => p.brand).filter(Boolean))
+    return [...set].sort()
+  }, [products])
 
-  const handleSort = (value) => {
-    setSort(value)
-    setSortOpen(false)
+  // Apply all filters + sort client-side
+  const filtered = useMemo(() => {
+    let result = [...products]
+    if (appliedBrands.length > 0)  result = result.filter(p => appliedBrands.includes(p.brand))
+    if (appliedMinPrice)            result = result.filter(p => p.price >= parseFloat(appliedMinPrice))
+    if (appliedMaxPrice)            result = result.filter(p => p.price <= parseFloat(appliedMaxPrice))
+    if (appliedMinDiscount > 1)     result = result.filter(p => getDiscount(p) >= appliedMinDiscount)
+    if (appliedSort === 'price_asc')   result.sort((a, b) => a.price - b.price)
+    else if (appliedSort === 'price_desc') result.sort((a, b) => b.price - a.price)
+    else if (appliedSort === 'rating')    result.sort((a, b) => b.rating - a.rating)
+    else if (appliedSort === 'discount')  result.sort((a, b) => getDiscount(b) - getDiscount(a))
+    return result
+  }, [products, appliedBrands, appliedMinPrice, appliedMaxPrice, appliedSort, appliedMinDiscount])
+
+  const handleFilterApply = ({ brands, minPrice, maxPrice, sort, minDiscount }) => {
+    setAppliedBrands(brands); setAppliedMinPrice(minPrice)
+    setAppliedMaxPrice(maxPrice); setAppliedSort(sort); setAppliedMinDiscount(minDiscount)
   }
 
-  const filtered = products
+  const activeFilterCount = appliedBrands.length + (appliedMinPrice || appliedMaxPrice ? 1 : 0) + (appliedSort ? 1 : 0) + (appliedMinDiscount > 1 ? 1 : 0)
+
   const heroOverride = customHero ? {
     ...(customHero.img ? { poster: customHero.img } : {}),
     ...(customHero.tagline ? { tagline: customHero.tagline } : {}),
@@ -320,7 +336,7 @@ export default function CategoryPage() {
   const displayDescription = localizedTheme.description
   const catDesc = category?.description || `Shop authentic ${catName} products in Kuwait. Same-day delivery. Free on orders over KD 10.`
   const catImage = theme.poster || '/images/luxury-perfumes.webp'
-  const displayCount = total > 0 ? total : filtered.length
+  const displayCount = filtered.length
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -412,119 +428,46 @@ export default function CategoryPage() {
         </section>
       )}
 
+      {/* ═══ FILTER DRAWER ═══ */}
+      <FilterDrawer
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        brands={brands}
+        accentColor={theme.accentColor}
+        appliedBrands={appliedBrands}
+        appliedMinPrice={appliedMinPrice}
+        appliedMaxPrice={appliedMaxPrice}
+        appliedSort={appliedSort}
+        appliedMinDiscount={appliedMinDiscount}
+        onApply={handleFilterApply}
+      />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
         {/* ═══ TOOLBAR ═══ */}
         <div className="flex items-center justify-between gap-3 mb-6">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm text-gray-500 mr-1">
-              {loading ? '' : `${displayCount} ${t('products')}`}
-            </span>
-
-            <button
-              onClick={() => setFilterOpen(!filterOpen)}
-              className="flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-all duration-200 hover:shadow-md"
-              style={{
-                borderColor: filterOpen || maxPrice ? theme.accentColor : '#e5e7eb',
-                backgroundColor: filterOpen || maxPrice ? theme.accentColor + '10' : 'white',
-                color: filterOpen || maxPrice ? theme.accentColor : '#374151',
-              }}
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-              {t('filters')}
-              {maxPrice && (
-                <span className="w-5 h-5 rounded-full text-white text-[10px] flex items-center justify-center"
-                  style={{ backgroundColor: theme.accentColor }}>
-                  1
-                </span>
-              )}
-            </button>
-
-            {maxPrice && (
-              <button
-                onClick={() => handleFilterApply('')}
-                className="flex items-center gap-1 px-3 py-2 rounded-full bg-gray-100 text-gray-600 text-xs font-medium hover:bg-gray-200 transition-colors"
-              >
-                Max KD {maxPrice} <X className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-
-          {/* Sort dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setSortOpen(!sortOpen)}
-              className="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:border-gray-300 hover:shadow-md transition-all duration-200"
-            >
-              {t(sort === 'price_asc' ? 'price_low_high' : sort === 'price_desc' ? 'price_high_low' : sort === 'rating' ? 'top_rated' : 'sort_default')}
-              <ChevronDown className={`w-4 h-4 transition-transform ${sortOpen ? 'rotate-180' : ''}`} />
-            </button>
-            {sortOpen && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setSortOpen(false)} />
-                <div className="absolute right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 p-1.5 w-52 z-20 animate-fade-in">
-                  {SORT_OPTIONS.map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => handleSort(opt.value)}
-                      className={`w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all duration-150 flex items-center gap-2 ${
-                        sort === opt.value
-                          ? 'font-semibold'
-                          : 'text-gray-600 hover:bg-gray-50'
-                      }`}
-                      style={sort === opt.value ? { backgroundColor: theme.accentColor + '10', color: theme.accentColor } : {}}
-                    >
-                      <span>{opt.icon}</span> {t(opt.value === 'price_asc' ? 'price_low_high' : opt.value === 'price_desc' ? 'price_high_low' : opt.value === 'rating' ? 'top_rated' : 'sort_default')}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* ═══ FILTER PANEL ═══ */}
-        {filterOpen && (
-          <div className="rounded-2xl p-5 mb-6 animate-fade-in border"
+          <button
+            onClick={() => setFilterOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-all duration-200 hover:shadow-md"
             style={{
-              borderColor: theme.accentColor + '20',
-              background: `linear-gradient(135deg, ${theme.accentColor}05, ${theme.accentColor}10)`,
+              borderColor: activeFilterCount > 0 ? theme.accentColor : '#e5e7eb',
+              backgroundColor: activeFilterCount > 0 ? theme.accentColor + '10' : 'white',
+              color: activeFilterCount > 0 ? theme.accentColor : '#374151',
             }}
           >
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <SlidersHorizontal className="w-4 h-4" style={{ color: theme.accentColor }} />
-              {t('filters')}
-            </h3>
-            <div className="flex flex-wrap gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('max_price')}</label>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    placeholder="e.g. 50"
-                    value={priceInput}
-                    onChange={e => setPriceInput(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleFilterApply(priceInput)}
-                    className="w-32 border rounded-xl px-4 py-2.5 text-sm focus:outline-none transition-all"
-                    style={{ borderColor: theme.accentColor + '40' }}
-                  />
-                  <button
-                    onClick={() => handleFilterApply(priceInput)}
-                    className="px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all active:scale-95"
-                    style={{ backgroundColor: theme.accentColor }}
-                  >
-                    {t('apply') || 'Apply'}
-                  </button>
-                  <button onClick={() => handleFilterApply('')}
-                    className="text-xs text-gray-400 hover:text-red-500 transition-colors">
-                    {t('clear')}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+            <SlidersHorizontal className="w-4 h-4" />
+            {t('filters')} & Sort
+            {activeFilterCount > 0 && (
+              <span className="w-5 h-5 rounded-full text-white text-[10px] flex items-center justify-center"
+                style={{ backgroundColor: theme.accentColor }}>
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+          <span className="text-sm text-gray-500">
+            {loading ? '' : `${displayCount} ${t('products')}`}
+          </span>
+        </div>
 
         {/* ═══ PRODUCT GRID ═══ */}
         {loading ? (

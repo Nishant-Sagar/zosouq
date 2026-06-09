@@ -24,6 +24,7 @@ const OrderConfirmationPage = lazy(() => import('./pages/OrderConfirmationPage')
 const SearchPage           = lazy(() => import('./pages/SearchPage'))
 const WishlistPage         = lazy(() => import('./pages/WishlistPage'))
 const MyOrdersPage         = lazy(() => import('./pages/MyOrdersPage'))
+const SalePage             = lazy(() => import('./pages/SalePage'))
 const NotFoundPage         = lazy(() => import('./pages/NotFoundPage'))
 
 // Admin pages (separate bundle — no store context needed)
@@ -73,6 +74,7 @@ function StoreLayout() {
             <Route path="/search"                       element={<SearchPage />} />
             <Route path="/wishlist"                     element={<WishlistPage />} />
             <Route path="/my-orders"                    element={<MyOrdersPage />} />
+            <Route path="/sale/:slug"                  element={<SalePage />} />
             <Route path="*"                             element={<NotFoundPage />} />
           </Routes>
         </Suspense>

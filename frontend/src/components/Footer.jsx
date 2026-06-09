@@ -54,6 +54,11 @@ export default function Footer() {
           ))}
         </div>
 
+        {/* Phone */}
+        <a href="tel:+96565737994" className="block text-xs text-gray-400 hover:text-pink-400 transition-colors mb-3">
+          📞 +965 6573 7994
+        </a>
+
         {/* Bottom */}
         <div className="pt-3 border-t border-gray-800 flex items-center justify-between">
           <p className="text-[11px] text-gray-600 flex items-center gap-1">
@@ -80,8 +85,7 @@ export default function Footer() {
             </p>
             <ul className="space-y-2 text-sm text-gray-400">
               <li>📍 {t('kuwait_city')}</li>
-              <li>✉️ support@zosouq.com</li>
-              <li>📞 +965 XXXX XXXX</li>
+              <li><a href="tel:+96565737994" className="hover:text-pink-400 transition-colors">📞 +965 6573 7994</a></li>
             </ul>
             <div className="flex gap-3 mt-5">
               {[

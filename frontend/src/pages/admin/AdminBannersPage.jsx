@@ -89,6 +89,16 @@ const BANNER_GROUPS = [
       { key: 'category_promo_personal_care_2', label: 'Promo 2', type: 'category_promo' },
     ],
   },
+  {
+    group: 'Sale Pages',
+    slots: [
+      { key: 'sale_hero_perfumes',     label: 'Perfumes Sale',     type: 'category_hero' },
+      { key: 'sale_hero_makeup',       label: 'Makeup Sale',       type: 'category_hero' },
+      { key: 'sale_hero_hair_care',    label: 'Hair Care Sale',    type: 'category_hero' },
+      { key: 'sale_hero_body_care',    label: 'Body Care Sale',    type: 'category_hero' },
+      { key: 'sale_hero_personal_care',label: 'Personal Care Sale',type: 'category_hero' },
+    ],
+  },
 ]
 
 const SLOT_DEFAULTS = {
@@ -105,6 +115,11 @@ const SLOT_DEFAULTS = {
   category_hero_hair_care: { img: '/images/poster-haircare.webp', tagline: 'Healthy Hair, Happy You', description: 'Professional shampoos, conditioners, masks & styling products for every hair type.' },
   category_hero_body_care: { img: '/images/poster-bodycare.webp', tagline: 'Pamper Your Body', description: 'Luxury body scrubs, lotions, washes & spa essentials for radiant, silky-smooth skin.' },
   category_hero_personal_care: { img: '/images/poster-personalcare.webp', tagline: 'Self Care is the Best Care', description: 'Cleansers, moisturizers, serums, sunscreens & everyday essentials you can trust.' },
+  sale_hero_perfumes:     { img: '/images/poster-perfumes.webp',     tagline: 'Limited Time Offer', description: 'Authentic Arabian ouds & international designer fragrances at unbeatable prices.' },
+  sale_hero_makeup:       { img: '/images/poster-makeup.webp',       tagline: 'Limited Time Offer', description: 'Premium foundations, lipsticks, eyeshadows & more from top international brands.' },
+  sale_hero_hair_care:    { img: '/images/poster-haircare.webp',     tagline: 'Limited Time Offer', description: 'Professional shampoos, conditioners, masks & styling products for every hair type.' },
+  sale_hero_body_care:    { img: '/images/poster-bodycare.webp',     tagline: 'Limited Time Offer', description: 'Luxury body scrubs, lotions, washes & spa essentials for radiant, silky-smooth skin.' },
+  sale_hero_personal_care:{ img: '/images/poster-personalcare.webp', tagline: 'Limited Time Offer', description: 'Cleansers, moisturizers, serums, sunscreens & everyday essentials you can trust.' },
   category_promo_perfumes_1: { img: '/images/arabian-oud.webp', title: 'Arabian Oud Collection', sub: 'Exclusive fragrances from the finest oud' },
   category_promo_perfumes_2: { img: '/images/designer-perfumes.webp', title: 'Designer Perfumes', sub: 'Up to 60% less than retail' },
   category_promo_makeup_1: { img: '/images/makeup-collection.webp', title: 'Foundation Edit', sub: 'Find your perfect shade match' },
